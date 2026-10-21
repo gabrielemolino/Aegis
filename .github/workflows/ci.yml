@@ -21,5 +21,8 @@ jobs:
       - name: Build SentinelAI
         run: swift build -v
 
-      - name: Run Unit & Security Policy Tests
+      - name: Run Swift Unit & Security Policy Tests
         run: swift test -v
+
+      - name: Run Guest Telemetry Sensor Tests (Python 3)
+        run: python3 guest-sensor/test_sensor.py -v

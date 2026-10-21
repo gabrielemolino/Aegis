@@ -182,4 +182,15 @@ public struct FixtureDatasets: Sendable {
             TelemetryEvent(id: "EVT-INJECT-HB-02", timestamp: baseTime.addingTimeInterval(0.5), eventType: .sensorHeartbeat)
         ]
     }
+    
+    /// Catena combinata di tutti gli scenari per dimostrazione stream completa (Milestone v0.5)
+    public static func makeAllScenariosChain() -> [TelemetryEvent] {
+        var all: [TelemetryEvent] = []
+        all.append(contentsOf: makeCleanFixture())
+        all.append(contentsOf: makeUnexpectedChildProcessFixture())
+        all.append(contentsOf: makeTempBurstFixture(count: 14))
+        all.append(contentsOf: makeCriticalPersistenceFixture())
+        all.append(contentsOf: makeHostilePromptInjectionFixture())
+        return all
+    }
 }

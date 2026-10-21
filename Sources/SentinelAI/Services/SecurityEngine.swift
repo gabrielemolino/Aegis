@@ -417,4 +417,89 @@ public final class SecurityEngine: ObservableObject {
             )
         }
     }
+    
+    // MARK: - Analisi su Telemetria Guest Ingerita (Milestone v0.5)
+    
+    /// Esegue l'analisi deterministica completa a partire dagli eventi reali catturati dal sensore guest
+    public func runAnalysis(
+        from ingestionResult: IngestionAnalysisResult,
+        for file: SafeTargetFile,
+        vmName: String = "SentinelAI-Ubuntu-Guest"
+    ) -> AnalysisReport {
+        stopAnalysis()
+        
+        let triggers: [RuleTrigger] = ingestionResult.ruleMatches.map { match in
+            RuleTrigger(
+                id: match.ruleId,
+                ruleName: match.ruleName,
+                severity: match.severity,
+                description: match.matchedIndicator,
+                matchedIndicator: "Regola attivata su eventi ID: [\(match.triggeredEventIDs.joined(separator: ", "))]"
+            )
+        }
+        
+        var evidence: [String] = []
+        evidence.append("Eventi di telemetria guest validati: \(ingestionResult.validEventsCount) (Totali: \(ingestionResult.totalEventsCount))")
+        if ingestionResult.corruptedLinesCount > 0 {
+            evidence.append("Linee scartate per non conformità schema: \(ingestionResult.corruptedLinesCount)")
+        }
+        for match in ingestionResult.ruleMatches {
+            evidence.append("[\(match.ruleId)] \(match.matchedIndicator)")
+        }
+        
+        var actions: [ContainmentAction] = []
+        if ingestionResult.classification == .detected {
+            actions.append(
+                ContainmentAction(
+                    actionType: "Arresto immediato VM per contenimento (Regole Critiche attivate)",
+                    targetVM: vmName,
+                    status: "Esecuzione raccomandata via Controller Host",
+                    isSimulation: false
+                )
+            )
+        } else if ingestionResult.classification == .suspicious {
+            actions.append(
+                ContainmentAction(
+                    actionType: "Generazione Alert & Notifica Operatore",
+                    targetVM: vmName,
+                    status: "In attesa di revisione manuale",
+                    isSimulation: false
+                )
+            )
+        }
+        
+        let limitations: [String] = [
+            "Analisi condotta sulla telemetria catturata dal sensore guest (Ubuntu ARM64).",
+            "Eventi di rete soggetti alla policy di disconnessione di default.",
+            "Tutti i dati estratti dal guest sono trattati categoricamente come dati passivi non affidabili."
+        ]
+        
+        let report = AnalysisReport(
+            targetFile: file,
+            classification: ingestionResult.classification,
+            confidenceScore: ingestionResult.confidenceScore,
+            summary: ingestionResult.summary,
+            evidence: evidence,
+            rulesTriggered: triggers,
+            actionsExecuted: actions,
+            limitations: limitations,
+            isSimulatedDemo: false
+        )
+        
+        self.currentReport = report
+        self.activeAnalysisState = .completed
+        self.isAnalysisActive = false
+        self.analysisProgress = 1.0
+        
+        auditLogger.log(
+            level: ingestionResult.classification == .detected ? .critical : (ingestionResult.classification == .suspicious ? .warning : .info),
+            category: .analysis,
+            source: "SecurityEngine",
+            description: "Analisi telemetria guest v0.5 completata. Esito: \(report.classification.rawValue)",
+            details: "Confidenza: \(Int(report.confidenceScore * 100))%, Regole matchate: \(triggers.count)",
+            isSimulation: false
+        )
+        
+        return report
+    }
 }

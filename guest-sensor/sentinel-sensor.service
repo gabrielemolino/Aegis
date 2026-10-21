@@ -1,0 +1,16 @@
+[Unit]
+Description=SentinelAI Guest Telemetry Sensor
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/sentinel-sensor
+ExecStart=/usr/bin/python3 /opt/sentinel-sensor/sentinel_guest_sensor.py --output /var/log/sentinel-telemetry.jsonl --heartbeat 2.0
+Restart=on-failure
+RestartSec=3s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

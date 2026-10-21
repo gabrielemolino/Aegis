@@ -190,7 +190,10 @@ public final class RuleEngineService: Sendable {
         // 6. Valutazione RULE-INJECT-001: HostileLogPromptInjection
         let injectionPatterns = [
             "ignore previous instructions",
+            "disregard previous instructions",
+            "disregard all previous instructions",
             "system override",
+            "system prompt:",
             "delete host",
             "rm -rf",
             "curl -s",

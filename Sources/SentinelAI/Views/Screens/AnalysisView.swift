@@ -7,6 +7,7 @@ public struct AnalysisView: View {
     
     @State private var showPreflightErrorModal: Bool = false
     @State private var samplePathInput: String = ""
+    @State private var telemetryInputMode: Int = 0 // 0: Fixture sintetica, 1: Telemetria Guest (.jsonl)
     
     public init(appState: AppState) {
         self.appState = appState
@@ -167,49 +168,20 @@ public struct AnalysisView: View {
                         .stroke(Theme.borderDefault, lineWidth: 1)
                 )
                 
-                // Card 2: Controlli Preflight & Avvio Analisi
+                // Card 2: Controlli Preflight & Parametri di Analisi
                 VStack(alignment: .leading, spacing: 14) {
                     HStack {
                         Text("2. Preflight e Parametri di Analisi")
                             .font(.system(size: 15, weight: .bold))
                             .foregroundColor(Theme.textPrimary)
                         Spacer()
+                        telemetryModeSelector
                     }
                     
-                    HStack(spacing: 16) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Scenario dimostrativo fixture:")
-                                .font(.system(size: 11))
-                                .foregroundColor(Theme.textMuted)
-                            
-                            Picker("", selection: $appState.selectedScenario) {
-                                ForEach(SecurityEngine.SimulatedScenario.allCases) { sc in
-                                    Text(sc.rawValue).tag(sc)
-                                }
-                            }
-                            .labelsHidden()
-                            .pickerStyle(.menu)
-                            .frame(maxWidth: 260)
-                        }
-                        
-                        Spacer()
-                        
-                        Button(action: {
-                            handleStartAnalysis()
-                        }) {
-                            HStack(spacing: 8) {
-                                Image(systemName: "play.shield.fill")
-                                Text("Verifica Preflight e Avvia Analisi")
-                            }
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(Theme.bgDeep)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(appState.targetFile != nil ? Theme.accentTealBright : Theme.textMuted)
-                            .cornerRadius(6)
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(appState.targetFile == nil || securityEngine.isAnalysisActive)
+                    if telemetryInputMode == 0 {
+                        fixtureParametersView
+                    } else {
+                        guestTelemetryParametersView
                     }
                     
                     // Mostra esito preflight
@@ -429,11 +401,183 @@ public struct AnalysisView: View {
         .background(Theme.bgDeep)
     }
     
+    // MARK: - Subviews per Card 2 (Preflight e Parametri)
+    
+    @ViewBuilder
+    private var telemetryModeSelector: some View {
+        Picker("", selection: $telemetryInputMode) {
+            Text("Fixture Sintetica (v0.3)").tag(0)
+            Text("Telemetria Guest .jsonl (v0.5)").tag(1)
+        }
+        .labelsHidden()
+        .pickerStyle(.segmented)
+        .frame(width: 320)
+        .onChange(of: telemetryInputMode) {
+            appState.isUsingRealTelemetry = (telemetryInputMode == 1)
+        }
+    }
+    
+    @ViewBuilder
+    private var fixtureParametersView: some View {
+        HStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Scenario dimostrativo fixture:")
+                    .font(.system(size: 11))
+                    .foregroundColor(Theme.textMuted)
+                
+                Picker("", selection: $appState.selectedScenario) {
+                    ForEach(SecurityEngine.SimulatedScenario.allCases) { sc in
+                        Text(sc.rawValue).tag(sc)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .frame(maxWidth: 260)
+            }
+            
+            Spacer()
+            
+            Button(action: {
+                handleStartAnalysis()
+            }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "play.shield.fill")
+                    Text("Verifica Preflight e Avvia Analisi")
+                }
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(Theme.bgDeep)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(appState.targetFile != nil ? Theme.accentTealBright : Theme.textMuted)
+                .cornerRadius(6)
+            }
+            .buttonStyle(.plain)
+            .disabled(appState.targetFile == nil || securityEngine.isAnalysisActive)
+        }
+    }
+    
+    @ViewBuilder
+    private var guestTelemetryParametersView: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                Button(action: {
+                    openTelemetryFilePicker()
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "square.and.arrow.down.fill")
+                        Text("Importa file .jsonl...")
+                    }
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Theme.textPrimary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Theme.surfaceElevated)
+                    .cornerRadius(6)
+                }
+                .buttonStyle(.plain)
+                
+                Button(action: {
+                    loadGuestSensorSimulationStream()
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "bolt.badge.clock.fill")
+                        Text("Carica Stream Dimostrativo Sensore Guest")
+                    }
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Theme.accentTealBright)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Theme.accentTealSubtle)
+                    .cornerRadius(6)
+                }
+                .buttonStyle(.plain)
+                
+                Spacer()
+                
+                Button(action: {
+                    handleStartAnalysis()
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "play.shield.fill")
+                        Text("Avvia Analisi Telemetria Guest")
+                    }
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(Theme.bgDeep)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(isGuestAnalysisReady ? Theme.accentTealBright : Theme.textMuted)
+                    .cornerRadius(6)
+                }
+                .buttonStyle(.plain)
+                .disabled(!isGuestAnalysisReady || securityEngine.isAnalysisActive)
+            }
+            
+            if let result = appState.importedTelemetryResult {
+                HStack(spacing: 12) {
+                    StatusBadgeView("\(result.validEventsCount) eventi validati", style: .verified)
+                    if result.corruptedLinesCount > 0 {
+                        StatusBadgeView("\(result.corruptedLinesCount) righe scartate", style: .manualReview)
+                    }
+                    Text("Regole attivate: \(result.ruleMatches.count)")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(Theme.textSecondary)
+                    Spacer()
+                    Text("Classificazione: \(result.classification.rawValue)")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(result.classification == .detected ? Theme.criticalRed : Theme.accentTealBright)
+                }
+                .padding(8)
+                .background(Theme.bgDeep)
+                .cornerRadius(6)
+            } else {
+                Text("Nessun file di telemetria caricato. Importa un file generato da 'sentinel_guest_sensor.py' o usa lo stream dimostrativo.")
+                    .font(.system(size: 11))
+                    .foregroundColor(Theme.textMuted)
+            }
+        }
+    }
+    
+    private var isGuestAnalysisReady: Bool {
+        appState.targetFile != nil && appState.importedTelemetryResult != nil
+    }
+    
     private func handleStartAnalysis() {
         let isPreflightOk = appState.performPreflight()
         if isPreflightOk {
-            appState.startAnalysis(scenario: appState.selectedScenario)
+            if appState.isUsingRealTelemetry && appState.importedTelemetryResult != nil {
+                appState.startRealTelemetryAnalysis()
+            } else {
+                appState.startAnalysis(scenario: appState.selectedScenario)
+            }
         }
+    }
+    
+    private func openTelemetryFilePicker() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.message = "Seleziona file di telemetria generato dal sensore guest (.jsonl)"
+        
+        if panel.runModal() == .OK, let url = panel.url {
+            appState.importGuestTelemetry(from: url)
+        }
+    }
+    
+    private func loadGuestSensorSimulationStream() {
+        // Genera stream con tutti gli eventi del sensore guest (child proc + burst /tmp + network egress + persistence)
+        let events = FixtureDatasets.makeAllScenariosChain()
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        
+        var lines: [String] = []
+        for ev in events {
+            if let data = try? encoder.encode(ev), let str = String(data: data, encoding: .utf8) {
+                lines.append(str)
+            }
+        }
+        let jsonl = lines.joined(separator: "\n")
+        appState.importGuestTelemetry(jsonlText: jsonl, sourceDescription: "Simulazione Completa Sensore Guest (v0.5)")
     }
     
     private func openNativeFilePicker() {

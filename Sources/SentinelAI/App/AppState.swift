@@ -133,6 +133,10 @@ public final class AppState: ObservableObject {
     @Published public var isExecutingVMCommand: Bool = false
     @Published public var lastVMCommandMessage: String? = nil
     @Published public var isCompromisedAwaitingRollback: Bool = false
+    
+    // MARK: - Telemetria Guest (Milestone v0.5)
+    @Published public var importedTelemetryResult: IngestionAnalysisResult? = nil
+    @Published public var isUsingRealTelemetry: Bool = false
 
     /// Esegue il controllo preflight per il file selezionato
     public func performPreflight() -> Bool {
@@ -144,6 +148,57 @@ public final class AppState: ObservableObject {
         )
         self.preflightResult = result
         return result == .passed
+    }
+    
+    /// Importa un file di telemetria guest (.jsonl) e lo valuta con il motore deterministico
+    public func importGuestTelemetry(from url: URL) {
+        do {
+            let res = try TelemetryIngestionService.shared.parseEvents(from: url)
+            let analysisRes = TelemetryIngestionService.shared.evaluateIngestedTelemetry(events: res.events, corruptedCount: res.corruptedCount)
+            self.importedTelemetryResult = analysisRes
+            self.isUsingRealTelemetry = true
+            self.lastVMCommandMessage = "Caricati \(analysisRes.validEventsCount) eventi di telemetria da \(url.lastPathComponent)."
+        } catch {
+            auditLogger.log(
+                level: .warning,
+                category: .analysis,
+                source: "AppState",
+                description: "Errore lettura file telemetria: \(url.lastPathComponent)",
+                details: error.localizedDescription,
+                isSimulation: false
+            )
+            self.lastVMCommandMessage = "Errore lettura file: \(error.localizedDescription)"
+        }
+    }
+    
+    /// Importa direttamente una stringa JSONL (es. da simulatore o stream del sensore)
+    public func importGuestTelemetry(jsonlText: String, sourceDescription: String = "Stream Diretto") {
+        let res = TelemetryIngestionService.shared.parseEvents(from: jsonlText)
+        let analysisRes = TelemetryIngestionService.shared.evaluateIngestedTelemetry(events: res.events, corruptedCount: res.corruptedCount)
+        self.importedTelemetryResult = analysisRes
+        self.isUsingRealTelemetry = true
+        self.lastVMCommandMessage = "Caricati \(analysisRes.validEventsCount) eventi (\(sourceDescription))."
+    }
+    
+    /// Avvia l'analisi deterministica basata sulla telemetria reale del sensore guest
+    public func startRealTelemetryAnalysis() {
+        guard let file = targetFile else { return }
+        guard let res = importedTelemetryResult else { return }
+        guard performPreflight() else { return }
+        
+        let report = securityEngine.runAnalysis(
+            from: res,
+            for: file,
+            vmName: prerequisites.authorizedVMName
+        )
+        self.recentAnalyses.insert(report, at: 0)
+        
+        // Se l'analisi rileva malware critico, attiva l'obbligo di rollback
+        if report.classification == .detected {
+            self.isCompromisedAwaitingRollback = true
+            self.isolationChecklist.cleanSnapshotVerified = false
+            self.vmStatus = .manualVerificationRequired
+        }
     }
     
     /// Avvia l'analisi simulata con visualizzazione progressi

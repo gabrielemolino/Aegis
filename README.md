@@ -130,7 +130,15 @@ Tutti i test unitari e di sicurezza sono eseguiti in locale e verificati:
 ✔ Test "Controllo Host: avvio simulato con conferma dello stato in esecuzione" passed
 ✔ Test "Contenimento: arresto confermato e registrazione evento di sicurezza" passed
 ✔ Test "Policy Bonifica Post-Arresto: obbligo di rollback prima di nuove analisi" passed
-Executed 33 tests, with 0 failures in 0.223 seconds.
+✔ Test "Verifica parsing conforme di stream JSONL dal sensore guest" passed
+✔ Test "Resilienza: righe corrotte o incomplete vengono scartate senza crash (Fail-Safe)" passed
+✔ Test "Rilevamento Burst /tmp: attiva RULE-IO-014 e classificazione Sospetta" passed
+✔ Test "Rilevamento Violazione Rete: attiva RULE-NET-003 e classificazione Rilevato (Critico)" passed
+✔ Test "Rilevamento Persistenza Non Autorizzata: attiva RULE-PERSIST-002" passed
+✔ Test "Anti-Tamper nei log: prompt injection trattata rigorosamente come dato passivo" passed
+✔ Test "Analisi completa con SecurityEngine produce report reale (isSimulatedDemo == false)" passed
+Executed 40 Swift tests with 0 failures in 0.188 seconds.
+Executed 6 Python sensor validation tests with 0 failures in 2.573 seconds.
 ```
 
 ---
@@ -143,8 +151,8 @@ Executed 33 tests, with 0 failures in 0.223 seconds.
 | **v0.2** | Gestione guidata UTM: wizard interattivo 5 passi, indurimento (rete, clipboard, cartelle, USB), query con watchdog timeout, policy bonifica snapshot ('clean-baseline'). | **Completato** |
 | **v0.3** | Motore di regole deterministico completo con catalogo versionato, parser eventi, 6 dataset fixture sintetiche, banco di prova interattivo ed evidenze con ID evento. | **Completato** |
 | **v0.4** | Controllo VM: controller host per la sola VM autorizzata, divieto VM estranee, conferma reale dell'arresto (zero falsi successi), obbligo rollback post-contenimento. | **Completato** |
-| **v0.5** | Sensore guest su Ubuntu ARM64 per telemetria di base (processi, file, rete). | Prossimo passo |
-| **v0.6** | Integrazione LLM locale con Ollama (spiegazione semantica con schema JSON validato). | Pianificato |
+| **v0.5** | Sensore guest Python 3 su Ubuntu ARM64 (processi, file, rete, heartbeat), ingestione sicura JSONL, analisi reale non simulata. | **Completato** |
+| **v0.6** | Integrazione LLM locale con Ollama (spiegazione semantica con schema JSON validato). | Prossimo passo |
 | **v0.7** | Beta pubblica, test end-to-end con simulazioni innocue e packaging macOS. | Pianificato |
 
 ---
