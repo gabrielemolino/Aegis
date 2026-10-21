@@ -271,7 +271,145 @@ public struct SandboxView: View {
                         .stroke(Theme.borderDefault, lineWidth: 1)
                 )
                 
-                // Card 4: Regola Non Negoziabile sulla Sospensione vs Bonifica
+                // Card 4: Controllo Host della VM Autorizzata (Milestone v0.4)
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("4. Controllo Diretto Host VM (v0.4)")
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundColor(Theme.textPrimary)
+                            Text("Controllo rigorosamente limitato alla sola VM autorizzata '\(appState.prerequisites.authorizedVMName)'.")
+                                .font(.system(size: 11))
+                                .foregroundColor(Theme.textSecondary)
+                        }
+                        Spacer()
+                        
+                        StatusBadgeView(
+                            appState.currentVMExecutionState.rawValue,
+                            style: appState.currentVMExecutionState == .running ? .verified : (appState.currentVMExecutionState == .stopped ? .neutral : .manualReview)
+                        )
+                    }
+                    
+                    if appState.isCompromisedAwaitingRollback {
+                        BannerAlertView(
+                            title: "Rollback Obbligatorio (Sez. 10)",
+                            message: "La VM è stata arrestata per contenimento. Per policy, è vietato riavviarla nello stato compromesso: ripristina lo snapshot pulito in UTM e premi 'Attesta Rollback da Snapshot'.",
+                            level: .warning
+                        )
+                    }
+                    
+                    HStack(spacing: 10) {
+                        Button(action: {
+                            appState.startAuthorizedVM()
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "play.circle.fill")
+                                Text("Avvia VM")
+                            }
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(Theme.bgDeep)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(appState.isCompromisedAwaitingRollback ? Theme.textMuted : Theme.accentTealBright)
+                            .cornerRadius(6)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(appState.isExecutingVMCommand || appState.isCompromisedAwaitingRollback)
+                        
+                        Button(action: {
+                            appState.stopAuthorizedVM(mode: .graceful)
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "power")
+                                Text("Spegni Ordinato")
+                            }
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(Theme.textPrimary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Theme.surfaceElevated)
+                            .cornerRadius(6)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(appState.isExecutingVMCommand)
+                        
+                        Button(action: {
+                            appState.stopAuthorizedVM(mode: .containmentImmediate)
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "exclamationmark.octagon.fill")
+                                Text("Arresto Contenimento")
+                            }
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(Theme.textPrimary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Theme.criticalRed)
+                            .cornerRadius(6)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(appState.isExecutingVMCommand)
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            appState.checkLiveVMStatus()
+                        }) {
+                            HStack(spacing: 4) {
+                                if appState.isExecutingVMCommand {
+                                    ProgressView().scaleEffect(0.6)
+                                } else {
+                                    Image(systemName: "arrow.clockwise")
+                                }
+                                Text("Interroga")
+                            }
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(Theme.accentTealBright)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(Theme.accentTealSubtle)
+                            .cornerRadius(4)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    
+                    if appState.isCompromisedAwaitingRollback {
+                        Button(action: {
+                            appState.attestSnapshotRollbackCompleted()
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "arrow.counterclockwise.circle.fill")
+                                Text("Attesta Rollback Eseguito (Ripristino Snapshot Pulito)")
+                            }
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(Theme.accentTealBright)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Theme.accentTealSubtle)
+                            .cornerRadius(6)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    
+                    if let msg = appState.lastVMCommandMessage {
+                        Text(msg)
+                            .font(.system(size: 11, design: .monospaced))
+                            .foregroundColor(Theme.textSecondary)
+                            .padding(8)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Theme.bgDeep)
+                            .cornerRadius(4)
+                    }
+                }
+                .padding(16)
+                .background(Theme.surfaceCard)
+                .cornerRadius(Theme.cardCornerRadius)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                        .stroke(Theme.borderDefault, lineWidth: 1)
+                )
+                
+                // Card 5: Regola Non Negoziabile sulla Sospensione vs Bonifica
                 BannerAlertView(
                     title: "Regola Non Negoziabile: Sospensione vs Bonifica",
                     message: UTMBonificaPolicy.suspensionCaveat,

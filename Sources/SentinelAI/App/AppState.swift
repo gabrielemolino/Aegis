@@ -129,6 +129,11 @@ public final class AppState: ObservableObject {
         }
     }
     
+    @Published public var currentVMExecutionState: UTMVMExecutionState = .unknown
+    @Published public var isExecutingVMCommand: Bool = false
+    @Published public var lastVMCommandMessage: String? = nil
+    @Published public var isCompromisedAwaitingRollback: Bool = false
+
     /// Esegue il controllo preflight per il file selezionato
     public func performPreflight() -> Bool {
         let result = securityEngine.evaluatePreflight(
@@ -155,12 +160,120 @@ public final class AppState: ObservableObject {
             onCompletion: { [weak self] report in
                 guard let self = self else { return }
                 self.recentAnalyses.insert(report, at: 0)
+                
+                // Se l'analisi ha rilevato attività critica/ostile, richiede rollback
+                if report.classification == .detected {
+                    self.isCompromisedAwaitingRollback = true
+                    self.isolationChecklist.cleanSnapshotVerified = false
+                    self.vmStatus = .manualVerificationRequired
+                }
             }
         )
     }
     
-    /// Interrompe l'analisi corrente
+    /// Interrompe l'analisi corrente e invia il segnale di arresto di contenimento
     public func stopAnalysis() {
         securityEngine.stopAnalysis()
+        
+        // Attua contenimento immediato sulla sola VM autorizzata
+        Task {
+            let res = await VMHostController.shared.stopVM(
+                targetVM: prerequisites.authorizedVMName,
+                authorizedVM: prerequisites.authorizedVMName,
+                mode: .containmentImmediate,
+                triggeredByRule: "ManualeOperatore"
+            )
+            await MainActor.run {
+                self.currentVMExecutionState = res.isSuccess ? .stopped : .unknown
+                self.lastVMCommandMessage = res.message
+                self.isCompromisedAwaitingRollback = true
+                self.isolationChecklist.cleanSnapshotVerified = false
+                self.vmStatus = .manualVerificationRequired
+            }
+        }
+    }
+    
+    // MARK: - Controllo VM Host (Milestone v0.4)
+    
+    /// Interroga in modo asincrono lo stato corrente della VM in UTM
+    public func checkLiveVMStatus() {
+        isExecutingVMCommand = true
+        Task {
+            let res = await UTMManagementService.shared.queryVMStatus(vmName: prerequisites.authorizedVMName)
+            await MainActor.run {
+                self.isExecutingVMCommand = false
+                self.currentVMExecutionState = res.state
+                self.lastVMCommandMessage = "Stato VM '\(self.prerequisites.authorizedVMName)': \(res.state.rawValue)"
+            }
+        }
+    }
+    
+    /// Avvia la VM autorizzata tramite il controller host
+    public func startAuthorizedVM() {
+        isExecutingVMCommand = true
+        lastVMCommandMessage = "Invio comando di avvio per '\(prerequisites.authorizedVMName)'..."
+        Task {
+            let res = await VMHostController.shared.startVM(
+                targetVM: prerequisites.authorizedVMName,
+                authorizedVM: prerequisites.authorizedVMName
+            )
+            await MainActor.run {
+                self.isExecutingVMCommand = false
+                if res.isSuccess {
+                    self.currentVMExecutionState = .running
+                    self.lastVMCommandMessage = res.message
+                } else {
+                    self.lastVMCommandMessage = res.message
+                }
+            }
+        }
+    }
+    
+    /// Arresta la VM autorizzata (graceful o contenimento immediato)
+    public func stopAuthorizedVM(mode: VMStopMode) {
+        isExecutingVMCommand = true
+        lastVMCommandMessage = "Invio comando di arresto (\(mode.rawValue)) per '\(prerequisites.authorizedVMName)'..."
+        Task {
+            let res = await VMHostController.shared.stopVM(
+                targetVM: prerequisites.authorizedVMName,
+                authorizedVM: prerequisites.authorizedVMName,
+                mode: mode,
+                triggeredByRule: mode == .containmentImmediate ? "ContenimentoManuale" : "SpegnimentoOrdinato"
+            )
+            await MainActor.run {
+                self.isExecutingVMCommand = false
+                if res.isSuccess {
+                    self.currentVMExecutionState = .stopped
+                    self.lastVMCommandMessage = res.message
+                    // Dopo l'arresto, lo snapshot deve essere confermato pulito prima del prossimo avvio
+                    self.isCompromisedAwaitingRollback = true
+                    self.isolationChecklist.cleanSnapshotVerified = false
+                    self.vmStatus = .manualVerificationRequired
+                } else {
+                    self.lastVMCommandMessage = res.message
+                }
+            }
+        }
+    }
+    
+    /// Attesta l'avvenuto rollback a snapshot pulito post-contenimento
+    public func attestSnapshotRollbackCompleted() {
+        isolationChecklist.cleanSnapshotVerified = true
+        isCompromisedAwaitingRollback = false
+        
+        if prerequisites.isUTMInstalled && isolationChecklist.allRequirementsMet {
+            vmStatus = .verified
+        }
+        
+        auditLogger.log(
+            level: .info,
+            category: .containment,
+            source: "UserAttestation",
+            description: "Rollback da snapshot pulito 'clean-baseline' attestato dall'operatore.",
+            details: "Stato VM '\(prerequisites.authorizedVMName)' bonificato. Ambiente reimpostato a Conforme.",
+            isSimulation: false
+        )
+        
+        lastVMCommandMessage = "Rollback attestato con successo. Sandbox ripristinata e conforme."
     }
 }

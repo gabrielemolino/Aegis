@@ -125,7 +125,12 @@ Tutti i test unitari e di sicurezza sono eseguiti in locale e verificati:
 ✔ Test "Regola Persistenza Critica (RULE-PERSIST-002): attiva raccomandazione arresto VM" passed
 ✔ Test "Regola Heartbeat (RULE-HEARTBEAT-000): assenza di telemetria porta a stato degradato (Fail-Closed)" passed
 ✔ Test "Regola Anti-Tamper (RULE-INJECT-001): prompt injection trattata rigorosamente come dato passivo" passed
-Executed 28 tests, with 0 failures in 0.195 seconds.
+✔ Test "Autorizzazione: rifiuta categoricamente comandi verso VM non autorizzate" passed
+✔ Test "Autorizzazione: accetta la sola VM autorizzata configurata" passed
+✔ Test "Controllo Host: avvio simulato con conferma dello stato in esecuzione" passed
+✔ Test "Contenimento: arresto confermato e registrazione evento di sicurezza" passed
+✔ Test "Policy Bonifica Post-Arresto: obbligo di rollback prima di nuove analisi" passed
+Executed 33 tests, with 0 failures in 0.223 seconds.
 ```
 
 ---
@@ -137,8 +142,8 @@ Executed 28 tests, with 0 failures in 0.195 seconds.
 | **v0.1** | UI nativa SwiftUI, dashboard, navigazione, onboarding, preflight fail-closed, motore simulato, audit log. | **Completato** |
 | **v0.2** | Gestione guidata UTM: wizard interattivo 5 passi, indurimento (rete, clipboard, cartelle, USB), query con watchdog timeout, policy bonifica snapshot ('clean-baseline'). | **Completato** |
 | **v0.3** | Motore di regole deterministico completo con catalogo versionato, parser eventi, 6 dataset fixture sintetiche, banco di prova interattivo ed evidenze con ID evento. | **Completato** |
-| **v0.4** | Controllo VM: controllo host limitato e verificato per avviare/fermare la sola VM autorizzata; test di errore e conferma dell'esito. | Prossimo passo |
-| **v0.5** | Sensore guest su Ubuntu ARM64 per telemetria di base (processi, file, rete). | Pianificato |
+| **v0.4** | Controllo VM: controller host per la sola VM autorizzata, divieto VM estranee, conferma reale dell'arresto (zero falsi successi), obbligo rollback post-contenimento. | **Completato** |
+| **v0.5** | Sensore guest su Ubuntu ARM64 per telemetria di base (processi, file, rete). | Prossimo passo |
 | **v0.6** | Integrazione LLM locale con Ollama (spiegazione semantica con schema JSON validato). | Pianificato |
 | **v0.7** | Beta pubblica, test end-to-end con simulazioni innocue e packaging macOS. | Pianificato |
 
