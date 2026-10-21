@@ -3,12 +3,28 @@
 > **Applicazione macOS nativa con interfaccia grafica per analisi sicura, rilevamento comportamentale e contenimento in sandbox.**  
 > *Bilingual (Italiano / English) Sandbox Security Defense for macOS Apple Silicon.*
 
+[![Aegis CI](https://github.com/gabrielemolino/Aegis/actions/workflows/ci.yml/badge.svg)](https://github.com/gabrielemolino/Aegis/actions/workflows/ci.yml)
 [![macOS Apple Silicon](https://img.shields.io/badge/Platform-macOS%20Apple%20Silicon-blue.svg)](https://developer.apple.com/)
 [![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
 [![SwiftUI](https://img.shields.io/badge/UI-SwiftUI%20Native-teal.svg)](https://developer.apple.com/xcode/swiftui/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status: v0.7 Beta](https://img.shields.io/badge/Release-v0.7%20Beta%20Release-brightgreen.svg)](#roadmap-per-release)
-[![Tests: 50 Swift + 6 Python](https://img.shields.io/badge/Tests-56%20Passing-success.svg)](#6-risultati-della-suite-di-test-v07)
+[![Status: v0.7 Beta](https://img.shields.io/badge/Release-v0.7%20Beta%20Release-brightgreen.svg)](#8-roadmap-per-release)
+[![Tests: 50 Swift + 6 Python](https://img.shields.io/badge/Tests-56%20Passing-success.svg)](#6-risultati-della-suite-di-test-v07-end-to-end--bilinguismo)
+
+---
+
+## 📌 Indice dei Contenuti
+- [Clausola di Esonero di Responsabilità / Legal Disclaimer](#-clausola-di-esonero-di-responsabilità--legal-disclaimer)
+- [1. Obiettivo del Progetto](#1-obiettivo-del-progetto)
+- [2. Principi Non Negoziabili](#2-principi-non-negoziabili)
+- [3. Architettura Logica (v0.7)](#3-architettura-logica-v07)
+- [4. Struttura del Repository](#4-struttura-del-repository)
+- [5. Requisiti di Sistema](#5-requisiti-di-sistema)
+- [6. Compilazione ed Esecuzione](#6-compilazione-ed-esecuzione)
+- [7. Risultati della Suite di Test](#7-risultati-della-suite-di-test-v07-end-to-end--bilinguismo)
+- [8. Packaging & Distribuzione (.app, .dmg, .zip)](#8-packaging--distribuzione-standalone-macos-apple-silicon)
+- [9. Roadmap per Release](#9-roadmap-per-release)
+- [10. Risorse di Sicurezza e Collaborazione](#10-risorse-di-sicurezza-e-collaborazione)
 
 ---
 
@@ -45,22 +61,23 @@ L'applicazione include **supporto bilingue nativo (Italiano / Inglese)** configu
 
 ---
 
-## 3. Architettura Logica (v0.6)
+## 3. Architettura Logica (v0.7)
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Host macOS (Apple Silicon)                 │
 │                                                                 │
 │  ┌────────────────────────┐         ┌────────────────────────┐  │
-│  │   SwiftUI Native App   │         │   Audit Logger Locale  │  │
+│  │   Aegis SwiftUI App    │         │   Audit Logger Locale  │  │
 │  │ • Dashboard Panoramica │         │ • Immutabile           │  │
-│  │ • Onboarding & Preflight─────────▶ • Sanificato           │  │
+│  │ • Onboarding Bilingue  ├─────────▶ • Sanificato           │  │
 │  │ • Selettore File Sicuro│         │ • Export JSON / Testo  │  │
-│  └───────────┬────────────┘         └────────────────────────┘  │
+│  │ • Esonero Responsabilit│         └────────────────────────┘  │
+│  └───────────┬────────────┘                                     │
 │              │                                                  │
 │              ▼                                                  │
 │  ┌────────────────────────┐         ┌────────────────────────┐  │
-│  │   SecurityEngine Host  │         │ Local LLM (Ollama v0.6)│  │
+│  │   SecurityEngine Host  │         │ Local LLM (Ollama)     │  │
 │  │ • Calcolo SHA-256 puro │         │ • Modello:             │  │
 │  │ • Regole deterministiche◀──────────  qwen2.5-coder:3b     │  │
 │  │ • Controlli Preflight  │         │ • Schema JSON rigido   │  │
@@ -83,7 +100,43 @@ L'applicazione include **supporto bilingue nativo (Italiano / Inglese)** configu
 
 ---
 
-## 4. Requisiti di Sistema
+## 4. Struttura del Repository
+
+```text
+Aegis/
+├── .github/
+│   ├── workflows/ci.yml           # GitHub Actions CI (macOS-14 Apple Silicon)
+│   └── ISSUE_TEMPLATE/            # Template ufficiali per bug report e feature request
+├── Sources/SentinelAI/            # Sorgenti dell'applicazione macOS nativa
+│   ├── App/                       # Entry point, AppState e ciclo di vita SwiftUI
+│   ├── Models/                    # Schemi di telemetria, report e MITRE ATT&CK
+│   ├── Services/
+│   │   ├── LocalizationManager.swift # Gestore bilinguismo reattivo (IT/EN)
+│   │   ├── SecurityEngine.swift   # Motore deterministico e policy di contenimento
+│   │   ├── VMHostController.swift # Controller host per VM UTM e query watchdog
+│   │   ├── LocalLLMService.swift  # Servizio LLM locale (Ollama qwen2.5-coder:3b)
+│   │   ├── TelemetryIngestionService.swift # Ingestione e convalida stream JSONL
+│   │   ├── SystemCheckService.swift # Sanity check ambiente e architettura host
+│   │   └── AuditLogger.swift      # Audit logging sanificato ed esportazione
+│   └── Views/                     # Componenti visuali SwiftUI
+│       ├── Navigation/SidebarView.swift
+│       └── Screens/               # Panoramica, UTM Wizard, Banco Regole, LLM, Impostazioni
+├── Tests/SentinelAITests/         # 50 Test Swift unitari, di sicurezza ed E2E
+├── guest-sensor/                  # Sensore di telemetria per Ubuntu Guest (Python 3)
+│   ├── sentinel_guest_sensor.py   # Rilevamento processi, burst I/O e rete
+│   └── test_sensor.py             # 6 Test di validazione telemetrica
+├── scripts/
+│   └── package_macos.sh           # Script di build release e packaging (.app, .dmg, .zip)
+├── CONTRIBUTING.md                # Linee guida per collaboratori e policy zero-malware
+├── SECURITY.md                    # Politica di sicurezza, disclosure ed esonero legale
+├── THREAT_MODEL.md                # Modello di minaccia formale STRIDE e confini di sicurezza
+├── LICENSE                        # Licenza MIT
+└── Package.swift                  # Manifest di compilazione Swift Package Manager
+```
+
+---
+
+## 5. Requisiti di Sistema
 
 - **Piattaforma:** macOS 14 (Sonoma) o successivo su Apple Silicon (M1 / M2 / M3 / M4 / M5).
 - **Toolchain:** Swift 6.0+ o Xcode 16+.
@@ -100,7 +153,7 @@ L'applicazione include **supporto bilingue nativo (Italiano / Inglese)** configu
 
 ---
 
-## 5. Compilazione ed Esecuzione
+## 6. Compilazione ed Esecuzione
 
 ```bash
 # Spostati nella cartella del progetto
@@ -118,7 +171,7 @@ swift run SentinelAI
 
 ---
 
-## 6. Risultati della Suite di Test v0.7 (End-to-End & Bilinguismo)
+## 7. Risultati della Suite di Test v0.7 (End-to-End & Bilinguismo)
 
 Tutti i 50 test unitari, deterministici, di sicurezza, di integrazione LLM e di localizzazione bilingue sono eseguiti in locale e verificati:
 
@@ -179,7 +232,7 @@ Executed 6 Python sensor validation tests with 0 failures in 2.548 seconds.
 
 ---
 
-## 7. Packaging & Distribuzione Standalone (macOS Apple Silicon)
+## 8. Packaging & Distribuzione Standalone (macOS Apple Silicon)
 
 Aegis v0.7 include uno script automatizzato per compilare e impacchettare l'applicazione in un bundle `.app` nativo firmato ad-hoc, oltre alla creazione di un archivio ZIP e di un'immagine disco DMG:
 
@@ -196,7 +249,7 @@ I file generati nella cartella `dist/`:
 
 ---
 
-## 8. Roadmap per Release
+## 9. Roadmap per Release
 
 | Milestone | Descrizione | Stato |
 | :--- | :--- | :--- |
@@ -210,7 +263,17 @@ I file generati nella cartella `dist/`:
 
 ---
 
-## 9. Licenza
+## 10. Risorse di Sicurezza e Collaborazione
+
+- [THREAT_MODEL.md](THREAT_MODEL.md) — Analisi dettagliata delle minacce STRIDE, vettori di attacco considerati e mitigazioni.
+- [SECURITY.md](SECURITY.md) — Politica di sicurezza, disclosure responsabile e limitazione di responsabilità legale.
+- [CONTRIBUTING.md](CONTRIBUTING.md) — Linee guida per contribuire, convenzioni sul bilinguismo e divieto assoluto di malware reale.
+
+---
+
+## 11. Licenza
 
 Rilasciato sotto licenza [MIT](LICENSE).
+Copyright (c) 2026 Aegis Contributors.
+
 
