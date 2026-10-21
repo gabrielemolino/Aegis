@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct SidebarView: View {
     @ObservedObject var appState: AppState
+    @ObservedObject private var i18n = LocalizationManager.shared
     
     public init(appState: AppState) {
         self.appState = appState
@@ -9,7 +10,7 @@ public struct SidebarView: View {
     
     public var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Header / Brand
+            // Header / Brand Aegis
             HStack(spacing: 10) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)
@@ -21,10 +22,10 @@ public struct SidebarView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("SentinelAI")
-                        .font(.system(size: 15, weight: .bold))
+                    Text(i18n.t("app_name"))
+                        .font(.system(size: 16, weight: .bold))
                         .foregroundColor(Theme.textPrimary)
-                    Text("macOS Sandbox Defense")
+                    Text(i18n.t("app_subtitle"))
                         .font(.system(size: 10))
                         .foregroundColor(Theme.textMuted)
                 }
@@ -49,7 +50,7 @@ public struct SidebarView: View {
                                 .frame(width: 20)
                                 .foregroundColor(appState.selectedTab == tab ? Theme.accentTealBright : Theme.textSecondary)
                             
-                            Text(tab.rawValue)
+                            Text(tab.localizedName)
                                 .font(.system(size: 13, weight: appState.selectedTab == tab ? .semibold : .regular))
                                 .foregroundColor(appState.selectedTab == tab ? Theme.textPrimary : Theme.textSecondary)
                             
@@ -83,7 +84,7 @@ public struct SidebarView: View {
                     Circle()
                         .fill(appState.prerequisites.isUTMInstalled ? Theme.accentTealBright : Theme.warningAmber)
                         .frame(width: 7, height: 7)
-                    Text("Host: Apple Silicon (\(appState.prerequisites.architectureName))")
+                    Text("\(i18n.t("sidebar_host_silicon")) (\(appState.prerequisites.architectureName))")
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(Theme.textSecondary)
                 }
@@ -92,7 +93,7 @@ public struct SidebarView: View {
                     Image(systemName: "cpu")
                         .font(.system(size: 10))
                         .foregroundColor(Theme.textMuted)
-                    Text(appState.prerequisites.isUTMInstalled ? "UTM Rilevato" : "UTM non rilevato")
+                    Text(appState.prerequisites.isUTMInstalled ? i18n.t("sidebar_utm_detected") : i18n.t("sidebar_utm_missing"))
                         .font(.system(size: 10))
                         .foregroundColor(Theme.textMuted)
                 }
@@ -102,7 +103,7 @@ public struct SidebarView: View {
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "questionmark.circle")
-                        Text("Limiti & Threat Model")
+                        Text(i18n.t("sidebar_limits_threat_model"))
                     }
                     .font(.system(size: 10, weight: .medium))
                     .foregroundColor(Theme.accentTealBright)

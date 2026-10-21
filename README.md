@@ -1,23 +1,36 @@
-# SentinelAI
+# Aegis
 
-> **Applicazione macOS nativa con interfaccia grafica per analisi sicura, rilevamento comportamentale e contenimento in sandbox.**
+> **Applicazione macOS nativa con interfaccia grafica per analisi sicura, rilevamento comportamentale e contenimento in sandbox.**  
+> *Bilingual (Italiano / English) Sandbox Security Defense for macOS Apple Silicon.*
 
 [![macOS Apple Silicon](https://img.shields.io/badge/Platform-macOS%20Apple%20Silicon-blue.svg)](https://developer.apple.com/)
 [![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
 [![SwiftUI](https://img.shields.io/badge/UI-SwiftUI%20Native-teal.svg)](https://developer.apple.com/xcode/swiftui/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status: v0.6 Local LLM](https://img.shields.io/badge/Release-v0.6%20Local%20LLM-cyan.svg)](#roadmap-per-release)
+[![Status: v0.7 Beta](https://img.shields.io/badge/Release-v0.7%20Beta%20Release-brightgreen.svg)](#roadmap-per-release)
+[![Tests: 50 Swift + 6 Python](https://img.shields.io/badge/Tests-56%20Passing-success.svg)](#6-risultati-della-suite-di-test-v07)
+
+---
+
+## ⚠️ Clausola di Esonero di Responsabilità / Legal Disclaimer
+
+> **ITALIANO:**  
+> **L'autore e gli sviluppatori di Aegis declinano ogni responsabilità per l'uso che l'utente fa del software e per qualsiasi conseguenza, danno diretto o indiretto, perdita di dati o malfunzionamento del sistema che possa derivare dall'analisi, gestione o manipolazione di file potenzialmente malevoli o sconosciuti.**  
+> L'utente è l'unico ed esclusivo responsabile delle proprie azioni, dell'isolamento della propria infrastruttura e della conformità alle leggi vigenti in materia di sicurezza informatica. Il software è fornito "COSÌ COM'È" a scopo di ricerca difensiva, audit e analisi controllata.
+>
+> **ENGLISH:**  
+> **The author and developers of Aegis disclaim all liability and responsibility for any use made of this software by the user, or for any consequences, direct or indirect damages, data loss, or system issues arising from analyzing, handling, or interacting with potentially malicious or unknown files.**  
+> The user assumes sole responsibility for their actions, environment isolation, and compliance with applicable cybersecurity regulations. The software is provided "AS IS" for defensive research, auditing, and controlled sandbox analysis.
 
 ---
 
 ## 1. Obiettivo del Progetto
 
-SentinelAI aiuta l'utente a verificare file o programmi scaricati da Internet all'interno di un ambiente di analisi isolato controllato (macchina virtuale UTM su Apple Silicon).
+Aegis aiuta l'utente a verificare file o programmi scaricati da Internet all'interno di un ambiente di analisi isolato controllato (macchina virtuale UTM su Apple Silicon).
 
 Combina controlli di sicurezza tradizionali, preflight rigoroso per l'isolamento host, telemetria comportamentale in ambiente guest usa-e-getta, contenimento automatico e un LLM locale opzionale (`qwen2.5-coder:3b` via Ollama) per la spiegazione guidata degli eventi e il mapping MITRE ATT&CK.
 
-> **Avvertenza di Sicurezza & Limiti Noti:**  
-> SentinelAI è un **prototipo tecnico di ricerca e portfolio ingegneristico**, non un prodotto commerciale o un sostituto dei sistemi nativi di macOS (XProtect, Gatekeeper, MRT, Firewall). La priorità è ridurre la superficie d'attacco ed evitare diffusioni incontrollate, non garantire l'individuazione del 100% delle minacce o l'impossibilità assoluta di evasione da hypervisor.
+L'applicazione include **supporto bilingue nativo (Italiano / Inglese)** configurabile durante l'onboarding di installazione e modificabile in qualsiasi momento nella scheda Impostazioni.
 
 ---
 
@@ -105,11 +118,14 @@ swift run SentinelAI
 
 ---
 
-## 6. Risultati della Suite di Test v0.6
+## 6. Risultati della Suite di Test v0.7 (End-to-End & Bilinguismo)
 
-Tutti i test unitari e di sicurezza sono eseguiti in locale e verificati:
+Tutti i 50 test unitari, deterministici, di sicurezza, di integrazione LLM e di localizzazione bilingue sono eseguiti in locale e verificati:
 
 ```text
+✔ Test "Bilinguismo Reattivo (Italiano & Inglese): Commutazione lingua istantanea e coerenza dizionario" passed
+✔ Test "Clausola Esonero di Responsabilità: Presenza e completezza del testo legale in entrambe le lingue" passed
+✔ Test "E2E Pipeline Completa: Da ispezione statica ad arresto VM, triage LLM ed export log" passed
 ✔ Test "Validazione Schema JSON Rigoroso: convalida corretta dei campi strutturati" passed
 ✔ Test "Anti-Allucinazione: scarta categoricamente ID evento inesistenti o inventati dall'LLM" passed
 ✔ Test "Allowlist Azioni Raccomandate: azioni non autorizzate ripiegano in sicurezza su LOG_AND_MONITOR" passed
@@ -157,13 +173,30 @@ Tutti i test unitari e di sicurezza sono eseguiti in locale e verificati:
 ✔ Test "Rilevamento Persistenza Non Autorizzata: attiva RULE-PERSIST-002" passed
 ✔ Test "Anti-Tamper nei log: prompt injection trattata rigorosamente come dato passivo" passed
 ✔ Test "Analisi completa con SecurityEngine produce report reale (isSimulatedDemo == false)" passed
-Executed 47 Swift tests with 0 failures in 0.277 seconds.
-Executed 6 Python sensor validation tests with 0 failures in 2.567 seconds.
+Executed 50 Swift tests with 0 failures in 0.267 seconds.
+Executed 6 Python sensor validation tests with 0 failures in 2.548 seconds.
 ```
 
 ---
 
-## 7. Roadmap per Release
+## 7. Packaging & Distribuzione Standalone (macOS Apple Silicon)
+
+Aegis v0.7 include uno script automatizzato per compilare e impacchettare l'applicazione in un bundle `.app` nativo firmato ad-hoc, oltre alla creazione di un archivio ZIP e di un'immagine disco DMG:
+
+```bash
+# Compilazione ed esportazione bundle Aegis.app, ZIP e DMG
+chmod +x scripts/package_macos.sh
+./scripts/package_macos.sh
+```
+
+I file generati nella cartella `dist/`:
+- `dist/Aegis.app` — Bundle applicativo macOS nativo con `Info.plist` (Sonoma 14.0+) e firma ad-hoc arm64.
+- `dist/Aegis-v0.7.0-macOS-arm64.zip` — Archivio compresso per distribuzione diretta.
+- `dist/Aegis-v0.7.0-macOS-arm64.dmg` — Immagine disco macOS con mount rapido per installazione in `/Applications`.
+
+---
+
+## 8. Roadmap per Release
 
 | Milestone | Descrizione | Stato |
 | :--- | :--- | :--- |
@@ -173,11 +206,11 @@ Executed 6 Python sensor validation tests with 0 failures in 2.567 seconds.
 | **v0.4** | Controllo VM: controller host per la sola VM autorizzata, divieto VM estranee, conferma reale dell'arresto (zero falsi successi), obbligo rollback post-contenimento. | **Completato** |
 | **v0.5** | Sensore guest Python 3 su Ubuntu ARM64 (processi, file, rete, heartbeat), ingestione sicura JSONL, analisi reale non simulata. | **Completato** |
 | **v0.6** | Integrazione LLM locale con Ollama (`qwen2.5-coder:3b`), spiegazione semantica, mapping MITRE ATT&CK, validazione JSON rigida, anti-allucinazione evidenze, fail-closed fallback. | **Completato** |
-| **v0.7** | Beta pubblica, test end-to-end con simulazioni innocue e packaging macOS. | Prossimo passo |
+| **v0.7** | Rebranding ad **Aegis**, localizzazione bilingue reattiva (IT/EN all'onboarding e nelle impostazioni), clausola esplicita di non responsabilità, test suite end-to-end (50 test) e packaging standalone `.app` / `.dmg` per macOS. | **Completato** |
 
 ---
 
-## 8. Licenza
+## 9. Licenza
 
 Rilasciato sotto licenza [MIT](LICENSE).
 

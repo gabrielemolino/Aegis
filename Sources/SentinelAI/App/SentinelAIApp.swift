@@ -7,7 +7,7 @@ public struct SentinelAIApp: App {
     public init() {}
     
     public var body: some Scene {
-        WindowGroup {
+        WindowGroup("Aegis — macOS Sandbox Defense") {
             MainContentView(appState: appState)
                 .preferredColorScheme(.dark)
                 .background(Theme.bgDeep)

@@ -3,6 +3,7 @@ import SwiftUI
 public struct OverviewView: View {
     @ObservedObject var appState: AppState
     @ObservedObject private var llmService = LocalLLMService.shared
+    @ObservedObject private var i18n = LocalizationManager.shared
     @State private var showRuleCatalogModal: Bool = false
     
     public init(appState: AppState) {
@@ -15,11 +16,11 @@ public struct OverviewView: View {
                 // Header
                 HStack(alignment: .center) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Panoramica")
+                        Text(i18n.t("overview_title"))
                             .font(.system(size: 24, weight: .bold))
                             .foregroundColor(Theme.textPrimary)
                         
-                        Text("Stato operativo dell'host e configurazione della sandbox di contenimento.")
+                        Text(i18n.t("overview_subtitle"))
                             .font(.system(size: 12))
                             .foregroundColor(Theme.textSecondary)
                     }
@@ -48,8 +49,8 @@ public struct OverviewView: View {
                 
                 // Prototype notice banner
                 BannerAlertView(
-                    title: "Prototipo di Sicurezza SentinelAI v0.1",
-                    message: "SentinelAI isola i file sospetti in una VM dedicata per limitare la superficie d'attacco. Non sostituisce XProtect, Gatekeeper o il firewall di macOS.",
+                    title: i18n.t("overview_banner_title"),
+                    message: i18n.t("overview_banner_desc"),
                     level: .info
                 )
                 
@@ -57,7 +58,7 @@ public struct OverviewView: View {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
                     // Card 1: Sandbox UTM
                     MetricCardView(
-                        title: "Sandbox UTM",
+                        title: i18n.t("overview_card_utm_title"),
                         value: appState.vmStatus.rawValue,
                         detail: appState.prerequisites.isUTMInstalled ? "Applicazione UTM rilevata. Richiesta verifica snapshot." : "UTM non trovato nel percorso predefinito.",
                         icon: "shippingbox.fill",
@@ -71,13 +72,13 @@ public struct OverviewView: View {
                     
                     // Card 2: Motore Regole
                     MetricCardView(
-                        title: "Motore di Rilevamento",
+                        title: i18n.t("overview_card_rules_title"),
                         value: "\(RuleEngineService.shared.rulesCatalog.count) Regole Versionate",
                         detail: "Versione: \(RuleEngineService.shared.engineVersion). Valutazione deterministica su eventi fixture.",
                         icon: "bolt.shield.fill",
                         badgeText: "Deterministico",
                         badgeStyle: .verified,
-                        actionTitle: "Esplora catalogo regole →",
+                        actionTitle: i18n.t("overview_explore_rules"),
                         action: {
                             showRuleCatalogModal = true
                         }
@@ -90,13 +91,13 @@ public struct OverviewView: View {
                 // Controlli di Sicurezza / Checklist Isolamento
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Controlli di Isolamento Host/Guest")
+                        Text(i18n.t("overview_checklist_title"))
                             .font(.system(size: 15, weight: .bold))
                             .foregroundColor(Theme.textPrimary)
                         
                         Spacer()
                         
-                        Text("Policy Fail-Closed Attiva")
+                        Text(i18n.t("overview_fail_closed_active"))
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(Theme.textMuted)
                     }
@@ -142,7 +143,7 @@ public struct OverviewView: View {
                 // Sezione Attività Recenti
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Attività Recenti")
+                        Text(i18n.t("overview_recent_activity"))
                             .font(.system(size: 15, weight: .bold))
                             .foregroundColor(Theme.textPrimary)
                         Spacer()
@@ -152,7 +153,7 @@ public struct OverviewView: View {
                         }) {
                             HStack(spacing: 6) {
                                 Image(systemName: "plus.circle.fill")
-                                Text("Avvia nuova analisi")
+                                Text(i18n.t("overview_start_new_analysis"))
                             }
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(Theme.accentTealBright)
@@ -170,10 +171,10 @@ public struct OverviewView: View {
                             Image(systemName: "tray")
                                 .font(.system(size: 30))
                                 .foregroundColor(Theme.textMuted)
-                            Text("Nessuna analisi eseguita")
+                            Text(i18n.t("overview_no_analyses"))
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(Theme.textSecondary)
-                            Text("Seleziona un file da verificare in modalità isolata per avviare il preflight.")
+                            Text(i18n.t("overview_no_analyses_sub"))
                                 .font(.system(size: 11))
                                 .foregroundColor(Theme.textMuted)
                         }
@@ -261,13 +262,13 @@ public struct OverviewView: View {
         }()
         
         MetricCardView(
-            title: "Analista AI Locale",
+            title: i18n.t("overview_card_llm_title"),
             value: llmService.config.selectedModel,
             detail: detailText,
             icon: "brain.head.profile",
             badgeText: badgeText,
             badgeStyle: badgeStyle,
-            actionTitle: "Configura modello →",
+            actionTitle: i18n.t("overview_configure_model"),
             action: {
                 appState.selectedTab = .settings
             }

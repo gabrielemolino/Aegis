@@ -10,6 +10,17 @@ public enum SidebarTab: String, CaseIterable, Identifiable {
     
     public var id: String { rawValue }
     
+    @MainActor
+    public var localizedName: String {
+        switch self {
+        case .overview: return LocalizationManager.shared.t("tab_overview")
+        case .sandbox: return LocalizationManager.shared.t("tab_sandbox")
+        case .analysis: return LocalizationManager.shared.t("tab_analysis")
+        case .events: return LocalizationManager.shared.t("tab_events")
+        case .settings: return LocalizationManager.shared.t("tab_settings")
+        }
+    }
+    
     public var icon: String {
         switch self {
         case .overview: return "square.grid.2x2.fill"
@@ -48,6 +59,11 @@ public final class AppState: ObservableObject {
     public init() {
         let prereqs = systemCheckService.inspectEnvironment()
         self.prerequisites = prereqs
+        
+        // Verifica primo avvio per mostrare l'onboarding con scelta lingua ed esonero di responsabilità
+        if !UserDefaults.standard.bool(forKey: "aegis_onboarding_completed") {
+            self.showOnboardingModal = true
+        }
         
         // Carica la configurazione UTM persistita (Milestone v0.2)
         let utmConfig = UTMManagementService.shared.loadConfiguration()

@@ -3,6 +3,7 @@ import SwiftUI
 public struct SettingsView: View {
     @ObservedObject var appState: AppState
     @ObservedObject private var llmService = LocalLLMService.shared
+    @ObservedObject private var i18n = LocalizationManager.shared
     
     @AppStorage("telemetry_enabled") private var telemetryEnabled: Bool = false
     @AppStorage("log_retention_days") private var logRetentionDays: Int = 30
@@ -19,21 +20,27 @@ public struct SettingsView: View {
             VStack(alignment: .leading, spacing: 22) {
                 // Header
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Impostazioni e Politiche di Sicurezza")
+                    Text(i18n.t("settings_title"))
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(Theme.textPrimary)
-                    Text("Configurazione dell'analista AI locale (Ollama v0.6), ritenzione log e isolamento.")
+                    Text(i18n.t("settings_subtitle"))
                         .font(.system(size: 12))
                         .foregroundColor(Theme.textSecondary)
                 }
                 
-                // Section 1: Analista LLM Locale
+                // Section 1: Lingua & Internazionalizzazione
+                languageSectionView
+                
+                // Section 2: Dichiarazione di Non Responsabilità
+                liabilityDisclaimerSectionView
+                
+                // Section 3: Analista LLM Locale
                 llmSectionView
                 
-                // Section 2: Privacy e Telemetria
+                // Section 4: Privacy e Telemetria
                 privacySectionView
                 
-                // Section 3: Politica di Contenimento e Fail-Closed
+                // Section 5: Politica di Contenimento e Fail-Closed
                 containmentSectionView
             }
             .padding(24)
@@ -44,7 +51,97 @@ public struct SettingsView: View {
         }
     }
     
-    // MARK: - Section 1: Analista LLM Locale
+    // MARK: - Section 1: Lingua & Localizzazione
+    
+    @ViewBuilder
+    private var languageSectionView: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Image(systemName: "globe")
+                    .foregroundColor(Theme.accentTeal)
+                Text(i18n.t("settings_lang_section_title"))
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
+                Spacer()
+                StatusBadgeView(i18n.currentLanguage.displayName, style: .verified)
+            }
+            
+            HStack(spacing: 16) {
+                Text(i18n.t("settings_lang_label"))
+                    .font(.system(size: 12))
+                    .foregroundColor(Theme.textSecondary)
+                
+                Picker("", selection: Binding(
+                    get: { i18n.currentLanguage },
+                    set: { i18n.setLanguage($0) }
+                )) {
+                    ForEach(AppLanguage.allCases) { lang in
+                        Text("\(lang.flag) \(lang.displayName)").tag(lang)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .frame(width: 240)
+                
+                Spacer()
+            }
+            
+            Text(i18n.t("settings_lang_desc"))
+                .font(.system(size: 11))
+                .foregroundColor(Theme.textMuted)
+        }
+        .padding(16)
+        .background(Theme.surfaceCard)
+        .cornerRadius(Theme.cardCornerRadius)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                .stroke(Theme.borderDefault, lineWidth: 1)
+        )
+    }
+    
+    // MARK: - Section 2: Dichiarazione di Non Responsabilità & Esonero Legale
+    
+    @ViewBuilder
+    private var liabilityDisclaimerSectionView: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(Theme.warningAmber)
+                Text(i18n.t("disclaimer_title"))
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
+                Spacer()
+                StatusBadgeView(i18n.t("disclaimer_badge"), style: .manualReview)
+            }
+            
+            Text(i18n.t("disclaimer_summary"))
+                .font(.system(size: 11))
+                .foregroundColor(Theme.textSecondary)
+                .lineSpacing(3)
+                .padding(12)
+                .background(Theme.bgDeep)
+                .cornerRadius(6)
+            
+            HStack(spacing: 6) {
+                Image(systemName: "hand.raised.shield.fill")
+                    .font(.system(size: 12))
+                    .foregroundColor(Theme.warningAmber)
+                Text("Nota per l'Utente: L'esecuzione o l'analisi di file non fidati avviene sotto la tua esclusiva responsabilità.")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Theme.warningAmber)
+            }
+            .padding(.top, 2)
+        }
+        .padding(16)
+        .background(Theme.warningAmber.opacity(0.05))
+        .cornerRadius(Theme.cardCornerRadius)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                .stroke(Theme.warningAmber.opacity(0.3), lineWidth: 1)
+        )
+    }
+    
+    // MARK: - Section 3: Analista LLM Locale
     
     @ViewBuilder
     private var llmSectionView: some View {
@@ -52,27 +149,27 @@ public struct SettingsView: View {
             HStack {
                 Image(systemName: "brain.head.profile")
                     .foregroundColor(Theme.accentTeal)
-                Text("Analista LLM Locale (Ollama v0.6)")
+                Text(i18n.t("settings_llm_section_title"))
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(Theme.textPrimary)
                 Spacer()
                 llmStatusBadge
             }
             
-            Toggle("Abilita triage semantico e spiegazione tecnica con LLM locale", isOn: $llmService.config.isLLMAnalysisEnabled)
+            Toggle(i18n.t("settings_llm_toggle"), isOn: $llmService.config.isLLMAnalysisEnabled)
                 .toggleStyle(.switch)
             
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Modello LLM Selezionato:")
+                    Text(i18n.t("settings_llm_model_label"))
                         .font(.system(size: 12))
                         .foregroundColor(Theme.textSecondary)
                     
                     Picker("", selection: $llmService.config.selectedModel) {
-                        Text("qwen2.5-coder:3b (Consigliato per Apple Silicon 8GB)").tag("qwen2.5-coder:3b")
-                        Text("qwen2.5:3b (Generico compatto)").tag("qwen2.5:3b")
+                        Text("qwen2.5-coder:3b (Apple Silicon 8GB)").tag("qwen2.5-coder:3b")
+                        Text("qwen2.5:3b (Generico)").tag("qwen2.5:3b")
                         Text("llama3.2:3b (Meta LLaMA 3.2)").tag("llama3.2:3b")
-                        Text("mistral:7b (Richiede >8GB RAM)").tag("mistral:7b")
+                        Text("mistral:7b (>8GB RAM)").tag("mistral:7b")
                     }
                     .labelsHidden()
                     .pickerStyle(.menu)
@@ -95,7 +192,7 @@ public struct SettingsView: View {
                         } else {
                             Image(systemName: "arrow.clockwise.circle")
                         }
-                        Text("Verifica Connessione")
+                        Text(i18n.t("settings_llm_check_conn"))
                     }
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(Theme.accentTealBright)
@@ -109,7 +206,7 @@ public struct SettingsView: View {
             }
             
             HStack {
-                Text("Endpoint Ollama:")
+                Text(i18n.t("settings_llm_endpoint_label"))
                     .font(.system(size: 12))
                     .foregroundColor(Theme.textSecondary)
                 
@@ -121,18 +218,18 @@ public struct SettingsView: View {
                 Spacer()
             }
             
-            Toggle("Fallback su Simulatore Mock (qwen2.5-coder:3b) se Ollama non risponde", isOn: $llmService.config.isMockFallbackEnabled)
+            Toggle(i18n.t("settings_llm_mock_toggle"), isOn: $llmService.config.isMockFallbackEnabled)
                 .toggleStyle(.switch)
             
-            Text("Se Ollama è offline o il modello non è presente, il simulatore mock consente di validare la pipeline semantica e i widget MITRE ATT&CK senza bloccare l'interfaccia.")
+            Text(i18n.t("settings_llm_mock_desc"))
                 .font(.system(size: 11))
                 .foregroundColor(Theme.textMuted)
             
             ollamaSetupHelperView
             
             BannerAlertView(
-                title: "Architettura di Sicurezza dell'Analista LLM",
-                message: "L'LLM è rigorosamente consultivo e privo di capacità di esecuzione comandi. Riceve dati passivi minimizzati e restituisce spiegazioni tecniche strutturate. Le decisioni di contenimento e arresto sono regolate esclusivamente dal motore deterministico.",
+                title: i18n.t("settings_llm_banner_title"),
+                message: i18n.t("settings_llm_banner_msg"),
                 level: .info
             )
         }
@@ -159,7 +256,7 @@ public struct SettingsView: View {
     @ViewBuilder
     private var ollamaSetupHelperView: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Comandi per configurare il modello sul Mac:")
+            Text(i18n.t("settings_llm_commands_hint"))
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundColor(Theme.textSecondary)
             
@@ -184,7 +281,7 @@ public struct SettingsView: View {
         .cornerRadius(6)
     }
     
-    // MARK: - Section 2: Privacy e Telemetria
+    // MARK: - Section 4: Privacy e Telemetria
     
     @ViewBuilder
     private var privacySectionView: some View {
@@ -192,17 +289,17 @@ public struct SettingsView: View {
             HStack {
                 Image(systemName: "lock.shield.fill")
                     .foregroundColor(Theme.accentTeal)
-                Text("Privacy e Ritenzione Dati")
+                Text(i18n.t("settings_privacy_title"))
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(Theme.textPrimary)
                 Spacer()
             }
             
-            Toggle("Condivisione telemetria diagnostica anonima (Disattivata per default)", isOn: $telemetryEnabled)
+            Toggle(i18n.t("settings_telemetry_toggle"), isOn: $telemetryEnabled)
                 .toggleStyle(.switch)
             
             HStack {
-                Text("Giorni di conservazione audit log locale:")
+                Text(i18n.t("settings_log_retention_label"))
                     .font(.system(size: 12))
                     .foregroundColor(Theme.textSecondary)
                 Spacer()
@@ -217,8 +314,8 @@ public struct SettingsView: View {
             }
             
             BannerAlertView(
-                title: "Zero Cloud Upload",
-                message: "Nessun file dell'utente, hash o telemetria viene inviato a server terzi o servizi cloud proprietari. Tutte le verifiche si svolgono al 100% in locale.",
+                title: i18n.t("settings_zero_cloud_title"),
+                message: i18n.t("settings_zero_cloud_msg"),
                 level: .info
             )
         }
@@ -231,7 +328,7 @@ public struct SettingsView: View {
         )
     }
     
-    // MARK: - Section 3: Politica di Contenimento e Fail-Closed
+    // MARK: - Section 5: Politica di Contenimento e Fail-Closed
     
     @ViewBuilder
     private var containmentSectionView: some View {
@@ -239,16 +336,16 @@ public struct SettingsView: View {
             HStack {
                 Image(systemName: "exclamationmark.shield.fill")
                     .foregroundColor(Theme.warningAmber)
-                Text("Politica Fail-Closed e Contenimento Host")
+                Text(i18n.t("settings_containment_title"))
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(Theme.textPrimary)
                 Spacer()
             }
             
-            Toggle("Blocca rigorosamente l'analisi se manca uno snapshot pulito", isOn: $strictFailClosed)
+            Toggle(i18n.t("settings_containment_toggle"), isOn: $strictFailClosed)
                 .toggleStyle(.switch)
             
-            Text("Quando attiva, la policy 'Fail-Closed' impedisce l'avvio dell'analisi se i parametri di sicurezza non sono comprovati in modo inequivocabile.")
+            Text(i18n.t("settings_containment_desc"))
                 .font(.system(size: 11))
                 .foregroundColor(Theme.textMuted)
         }
@@ -261,4 +358,5 @@ public struct SettingsView: View {
         )
     }
 }
+
 

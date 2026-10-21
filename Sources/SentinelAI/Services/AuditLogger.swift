@@ -41,10 +41,14 @@ public final class AuditLogger: ObservableObject, @unchecked Sendable {
             isSimulation: isSimulation
         )
         
-        queue.async {
+        if Thread.isMainThread {
+            self.events.insert(event, at: 0)
+            if self.events.count > 1000 {
+                self.events.removeLast()
+            }
+        } else {
             DispatchQueue.main.async {
                 self.events.insert(event, at: 0)
-                // Mantieni max 1000 eventi in memoria
                 if self.events.count > 1000 {
                     self.events.removeLast()
                 }

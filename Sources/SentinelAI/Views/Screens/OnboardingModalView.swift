@@ -2,7 +2,10 @@ import SwiftUI
 
 public struct OnboardingModalView: View {
     @ObservedObject var appState: AppState
+    @ObservedObject private var i18n = LocalizationManager.shared
     @Environment(\.dismiss) private var dismiss
+    
+    @State private var acceptedDisclaimer: Bool = false
     
     public init(appState: AppState) {
         self.appState = appState
@@ -13,22 +16,21 @@ public struct OnboardingModalView: View {
             // Header
             HStack(spacing: 12) {
                 Image(systemName: "shield.checkered")
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.system(size: 26, weight: .bold))
                     .foregroundColor(Theme.accentTealBright)
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Benvenuto in SentinelAI")
-                        .font(.system(size: 18, weight: .bold))
+                    Text(i18n.t("onboarding_welcome"))
+                        .font(.system(size: 19, weight: .bold))
                         .foregroundColor(Theme.textPrimary)
-                    Text("Specifiche di Sicurezza e Principi Operativi v0.1")
+                    Text(i18n.t("onboarding_version_title"))
                         .font(.system(size: 11))
                         .foregroundColor(Theme.textSecondary)
                 }
                 Spacer()
                 
                 Button(action: {
-                    appState.showOnboardingModal = false
-                    dismiss()
+                    completeOnboarding()
                 }) {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 18))
@@ -42,52 +44,21 @@ public struct OnboardingModalView: View {
             Divider().background(Theme.borderSubtle)
             
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
-                    // Limiti di Responsabilità
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Obiettivo e Limiti di Responsabilità")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(Theme.accentTealBright)
-                        
-                        Text("SentinelAI è un prototipo tecnico per l'analisi controllata in ambiente isolato (UTM) su macOS Apple Silicon. La priorità è ridurre la superficie d'attacco tramite isolamento rigoroso.")
-                            .font(.system(size: 12))
-                            .foregroundColor(Theme.textSecondary)
-                        
-                        BannerAlertView(
-                            title: "Cosa SentinelAI NON promette",
-                            message: "Non promette protezione assoluta e non sostituisce XProtect, Gatekeeper o il firewall di macOS. Non garantisce che ogni malware venga individuato o che una VM non possa mai essere evasa.",
-                            level: .warning
-                        )
-                    }
+                VStack(alignment: .leading, spacing: 20) {
+                    // 1. Language Setup Card
+                    languageSelectionCard
                     
-                    // Principi Non Negoziabili
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Principi Non Negoziabili del Progetto")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(Theme.accentTealBright)
-                        
-                        VStack(alignment: .leading, spacing: 6) {
-                            bulletPoint("1. La sicurezza opera anche se l'LLM è spento, lento, indisponibile o manipolato da prompt injection.")
-                            bulletPoint("2. L'LLM analizza e spiega; non riceve mai accesso diretto a shell privilegiate né esegue comandi arbitrari.")
-                            bulletPoint("3. Isolamento massimo di default: niente rete, cartelle condivise o clipboard sincronizzata.")
-                            bulletPoint("4. Nessun file dell'utente viene eseguito o copiato nella VM senza consenso esplicito.")
-                            bulletPoint("5. Nessun malware reale è incluso nel repository o nei test automatici.")
-                            bulletPoint("6. Policy Fail-Closed: se la sicurezza della VM non è verificabile, l'analisi non viene avviata.")
-                        }
-                    }
+                    // 2. Legal Disclaimer / Limitation of Liability Card
+                    liabilityDisclaimerCard
                     
-                    // Stato attuale prerequisiti
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Stato Prerequisiti Host:")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(Theme.textPrimary)
-                        
-                        HStack(spacing: 12) {
-                            StatusBadgeView("Apple Silicon: \(appState.prerequisites.architectureName)", style: appState.prerequisites.isAppleSilicon ? .verified : .critical)
-                            StatusBadgeView(appState.prerequisites.macOSVersion, style: appState.prerequisites.isMacOSCompatible ? .verified : .manualReview)
-                            StatusBadgeView(appState.prerequisites.isUTMInstalled ? "UTM Presente" : "UTM Mancante", style: appState.prerequisites.isUTMInstalled ? .verified : .manualReview)
-                        }
-                    }
+                    // 3. Defense Posture & Scope
+                    scopeSection
+                    
+                    // 4. Non-Negotiable Project Principles
+                    principlesSection
+                    
+                    // 5. Host Prerequisites Summary
+                    prerequisitesSection
                 }
                 .padding(20)
             }
@@ -96,26 +67,183 @@ public struct OnboardingModalView: View {
             
             // Footer
             HStack {
+                Text(i18n.t("disclaimer_badge"))
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(Theme.warningAmber)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Theme.warningAmber.opacity(0.15))
+                    .cornerRadius(4)
+                
                 Spacer()
+                
                 Button(action: {
-                    appState.showOnboardingModal = false
-                    dismiss()
+                    completeOnboarding()
                 }) {
-                    Text("Ho compreso i limiti operativi")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(Theme.bgDeep)
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 8)
-                        .background(Theme.accentTealBright)
-                        .cornerRadius(6)
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.shield.fill")
+                        Text(i18n.t("disclaimer_button_accept"))
+                    }
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(Theme.bgDeep)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 9)
+                    .background(acceptedDisclaimer ? Theme.accentTealBright : Theme.textMuted)
+                    .cornerRadius(6)
                 }
                 .buttonStyle(.plain)
+                .disabled(!acceptedDisclaimer)
             }
             .padding(16)
             .background(Theme.surfaceElevated)
         }
-        .frame(width: 580, height: 500)
+        .frame(width: 620, height: 620)
         .background(Theme.bgDeep)
+    }
+    
+    // MARK: - Subviews
+    
+    @ViewBuilder
+    private var languageSelectionCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "globe")
+                    .foregroundColor(Theme.accentTeal)
+                Text(i18n.t("onboarding_language_prompt"))
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
+                Spacer()
+            }
+            
+            HStack(spacing: 12) {
+                ForEach(AppLanguage.allCases) { lang in
+                    Button(action: {
+                        i18n.setLanguage(lang)
+                    }) {
+                        HStack(spacing: 8) {
+                            Text(lang.flag)
+                                .font(.system(size: 16))
+                            Text(lang.displayName)
+                                .font(.system(size: 12, weight: i18n.currentLanguage == lang ? .bold : .medium))
+                                .foregroundColor(i18n.currentLanguage == lang ? Theme.accentTealBright : Theme.textSecondary)
+                        }
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(i18n.currentLanguage == lang ? Theme.accentTealSubtle : Theme.surfaceElevated)
+                        .cornerRadius(6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(i18n.currentLanguage == lang ? Theme.accentTeal : Theme.borderSubtle, lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+                Spacer()
+            }
+        }
+        .padding(14)
+        .background(Theme.surfaceCard)
+        .cornerRadius(Theme.cardCornerRadius)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                .stroke(Theme.borderDefault, lineWidth: 1)
+        )
+    }
+    
+    @ViewBuilder
+    private var liabilityDisclaimerCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(Theme.warningAmber)
+                Text(i18n.t("disclaimer_title"))
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
+                Spacer()
+                StatusBadgeView(i18n.t("disclaimer_badge"), style: .manualReview)
+            }
+            
+            Text(i18n.t("disclaimer_summary"))
+                .font(.system(size: 11))
+                .foregroundColor(Theme.textSecondary)
+                .lineSpacing(3)
+                .padding(10)
+                .background(Theme.bgDeep)
+                .cornerRadius(6)
+            
+            Toggle(isOn: $acceptedDisclaimer) {
+                Text(i18n.t("disclaimer_checkbox"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Theme.accentTealBright)
+            }
+            .toggleStyle(.checkbox)
+            .padding(.top, 4)
+        }
+        .padding(14)
+        .background(Theme.warningAmber.opacity(0.06))
+        .cornerRadius(Theme.cardCornerRadius)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
+                .stroke(Theme.warningAmber.opacity(0.35), lineWidth: 1)
+        )
+    }
+    
+    @ViewBuilder
+    private var scopeSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(i18n.t("onboarding_scope_title"))
+                .font(.system(size: 13, weight: .bold))
+                .foregroundColor(Theme.accentTealBright)
+            
+            Text(i18n.t("onboarding_scope_desc"))
+                .font(.system(size: 11))
+                .foregroundColor(Theme.textSecondary)
+            
+            BannerAlertView(
+                title: i18n.t("onboarding_not_promised_title"),
+                message: i18n.t("onboarding_not_promised_msg"),
+                level: .warning
+            )
+        }
+    }
+    
+    @ViewBuilder
+    private var principlesSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(i18n.t("onboarding_principles_title"))
+                .font(.system(size: 13, weight: .bold))
+                .foregroundColor(Theme.accentTealBright)
+            
+            VStack(alignment: .leading, spacing: 6) {
+                bulletPoint(i18n.t("onboarding_rule_1"))
+                bulletPoint(i18n.t("onboarding_rule_2"))
+                bulletPoint(i18n.t("onboarding_rule_3"))
+                bulletPoint(i18n.t("onboarding_rule_4"))
+                bulletPoint(i18n.t("onboarding_rule_5"))
+                bulletPoint(i18n.t("onboarding_rule_6"))
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var prerequisitesSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Stato Prerequisiti Host / Host Environment:")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(Theme.textPrimary)
+            
+            HStack(spacing: 10) {
+                StatusBadgeView("Apple Silicon: \(appState.prerequisites.architectureName)", style: appState.prerequisites.isAppleSilicon ? .verified : .critical)
+                StatusBadgeView(appState.prerequisites.macOSVersion, style: appState.prerequisites.isMacOSCompatible ? .verified : .manualReview)
+                StatusBadgeView(appState.prerequisites.isUTMInstalled ? i18n.t("sidebar_utm_detected") : i18n.t("sidebar_utm_missing"), style: appState.prerequisites.isUTMInstalled ? .verified : .manualReview)
+            }
+        }
+    }
+    
+    private func completeOnboarding() {
+        UserDefaults.standard.set(true, forKey: "aegis_onboarding_completed")
+        appState.showOnboardingModal = false
+        dismiss()
     }
     
     private func bulletPoint(_ text: String) -> some View {
@@ -130,3 +258,4 @@ public struct OnboardingModalView: View {
         }
     }
 }
+

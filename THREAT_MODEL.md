@@ -1,16 +1,23 @@
-# SentinelAI — Threat Model & Security Architecture
+# Aegis — Threat Model & Security Architecture
 
-**Versione:** 0.1  
+**Versione:** 0.7 (Beta Release)  
 **Target:** macOS su Apple Silicon (arm64)  
 **Ambiente Isolato:** Virtualizzazione UTM (QEMU / Apple Virtualization Framework)  
 
 ---
 
+## ⚠️ Clausola di Esonero di Responsabilità Legale (Non-Responsibility Disclaimer)
+
+> **L'autore e gli sviluppatori di Aegis non sono in alcun caso responsabili per l'uso che l'utente fa del programma, né per eventuali danni diretti, indiretti, perdita di dati, malfunzionamenti o conseguenze derivanti dall'analisi di campioni software o file potenzialmente ostili.**  
+> Il programma è concepito esclusivamente come strumento di ausilio all'analisi e audit difensivo. Qualsiasi manipolazione di file sconosciuti o potenzialmente dannosi avviene sotto la **piena ed esclusiva responsabilità dell'utente**, che deve verificare autonomamente la sicurezza e l'integrità del proprio ambiente hardware e software.
+
+---
+
 ## 1. Obiettivo di Sicurezza e Postura di Difesa
 
-SentinelAI è progettato per analizzare file e payload potenzialmente malevoli riducendo al minimo la superficie d'attacco per l'host macOS.
+Aegis è progettato per analizzare file e payload potenzialmente malevoli riducendo al minimo la superficie d'attacco per l'host macOS.
 
-> **Assunzione Fondamentale:** Nessun sistema di isolamento software o hypervisor è teoricamente immune da escape o vulnerabilità 0-day. SentinelAI **non** promette protezione assoluta né sostituisce i controlli nativi di macOS (XProtect, Gatekeeper, MRT, Firewall). La sua priorità ingegneristica è il **contenimento deterministico**, la **separazione dei privilegi** e il principio **Fail-Closed**.
+> **Assunzione Fondamentale:** Nessun sistema di isolamento software o hypervisor è teoricamente immune da escape o vulnerabilità 0-day. Aegis **non** promette protezione assoluta né sostituisce i controlli nativi di macOS (XProtect, Gatekeeper, MRT, Firewall). La sua priorità ingegneristica è il **contenimento deterministico**, la **separazione dei privilegi** e il principio **Fail-Closed**.
 
 ---
 
