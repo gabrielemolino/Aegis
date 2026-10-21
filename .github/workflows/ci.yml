@@ -1,4 +1,4 @@
-name: SentinelAI CI
+name: Aegis CI
 
 on:
   push:
@@ -18,11 +18,16 @@ jobs:
       - name: Inspect Swift Version
         run: swift --version
 
-      - name: Build SentinelAI
+      - name: Build Aegis
         run: swift build -v
 
-      - name: Run Swift Unit & Security Policy Tests
+      - name: Run Swift Unit & Security Policy Tests (50 Tests)
         run: swift test -v
 
       - name: Run Guest Telemetry Sensor Tests (Python 3)
         run: python3 guest-sensor/test_sensor.py -v
+
+      - name: Verify Packaging Script (.app, .dmg, .zip)
+        run: |
+          chmod +x scripts/package_macos.sh
+          ./scripts/package_macos.sh
