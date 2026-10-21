@@ -1,35 +1,32 @@
-# Politica di Sicurezza / Security Policy
+# Security Policy
 
-## ⚠️ Clausola di Esonero di Responsabilità / Legal Disclaimer
+## ⚠️ Limitation of Liability / Legal Disclaimer
 
-> **ITALIANO:**  
-> **L'autore e gli sviluppatori di Aegis declinano ogni responsabilità per l'uso che l'utente fa del software e per qualsiasi conseguenza, danno diretto o indiretto, perdita di dati o malfunzionamento del sistema che possa derivare dall'analisi, gestione o manipolazione di file potenzialmente malevoli o sconosciuti.**  
-> L'utente è l'unico ed esclusivo responsabile delle proprie azioni, dell'isolamento della propria infrastruttura e della conformità alle leggi vigenti in materia di sicurezza informatica. Il software è fornito "COSÌ COM'È" a scopo di ricerca difensiva, audit e analisi controllata in sandbox.
+> **The author and developers of Aegis expressly disclaim any and all liability and responsibility for any use made of this software, or for any direct, indirect, incidental, special, or consequential damages, loss of data, system malfunctions, or security incidents arising from analyzing, handling, or interacting with potentially malicious, unknown, or hazardous files.**  
+> The user assumes sole and exclusive responsibility for their actions, for ensuring the strict isolation of their hardware and network infrastructure, and for compliance with all applicable cybersecurity and computer fraud laws. This software is provided strictly **"AS IS"** for educational, defensive research, security auditing, and controlled sandbox experimentation purposes.
 >
-> **ENGLISH:**  
-> **The author and developers of Aegis disclaim all liability and responsibility for any use made of this software by the user, or for any consequences, direct or indirect damages, data loss, or system issues arising from analyzing, handling, or interacting with potentially malicious or unknown files.**  
-> The user assumes sole responsibility for their actions, environment isolation, and compliance with applicable cybersecurity regulations. The software is provided "AS IS" for defensive research, auditing, and controlled sandbox analysis.
+> *(Nota in lingua italiana: L'autore e gli sviluppatori di Aegis non sono responsabili per l'uso che l'utente fa del programma né per le conseguenze o danni derivanti dall'analisi di file. L'utente è l'unico ed esclusivo responsabile delle proprie azioni e dell'isolamento del proprio ambiente).*
 
 ---
 
-## Versioni Supportate / Supported Versions
+## Supported Versions
 
-| Versione / Version | Supporto / Supported | Note / Notes |
-| :--- | :--- | :--- |
-| **0.7.x** | ✅ Sì / Yes | Versione Beta corrente con supporto Apple Silicon, Bilinguismo e LLM locale. |
-| < 0.7.0 | ❌ No | Versioni architetturali precedenti ad uso transitorio. |
+| Version | Supported | Notes |
+| :--- | :---: | :--- |
+| **0.7.x** | ✅ Yes | Current Beta release with Apple Silicon, Bilingual (IT/EN) UI, and Local LLM support. |
+| < 0.7.0 | ❌ No | Historical development milestones. |
 
 ---
 
-## Segnalazione di Vulnerabilità / Reporting a Vulnerability
+## Reporting a Vulnerability
 
-Se ritieni di aver identificato una vulnerabilità di sicurezza in Aegis (ad esempio una regressione nella sanitizzazione dei log contro Prompt Injection, una debolezza nelle policy di Fail-Closed o una vulnerabilità nel controller della VM), ti invitiamo a segnalarla in modo responsabile:
+If you discover a security flaw or vulnerability in Aegis (e.g., a regression in log sanitization against prompt injection, a flaw in the Fail-Closed preflight logic, or an issue in the VM host containment controller), please report it responsibly:
 
-1. **Non aprire una issue pubblica su GitHub.**
-2. Invia una segnalazione dettagliata via email all'indirizzo del maintainer o apri una [GitHub Security Advisory privata](https://github.com/gabrielemolino/Aegis/security/advisories/new).
-3. Includi nella segnalazione:
-   - Una descrizione dettagliata del difetto.
-   - I passaggi per riprodurlo utilizzando esclusivamente **fixture o payload sintetici innocui** (NON inviare malware reale).
-   - L'impatto potenziale sull'host macOS o sull'ambiente guest.
+1. **Do NOT open a public GitHub issue.**
+2. Submit a private report via [GitHub Security Advisories](https://github.com/gabrielemolino/Aegis/security/advisories/new).
+3. Include the following details in your report:
+   - A clear description of the vulnerability and its potential impact.
+   - Exact steps to reproduce using **strictly synthetic or benign fixtures** (NEVER attach real malware samples or hostile binaries).
+   - Expected behavior versus observed behavior on macOS Apple Silicon.
 
-Ci impegniamo a prendere in carico la segnalazione tempestivamente e a rilasciare patch correttive nel minor tempo possibile.
+We investigate all legitimate security reports promptly and strive to release verified patches in a timely manner.

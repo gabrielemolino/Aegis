@@ -1,179 +1,181 @@
 # Aegis
 
-> **Applicazione macOS nativa con interfaccia grafica per analisi sicura, rilevamento comportamentale e contenimento in sandbox.**  
-> *Bilingual (Italiano / English) Sandbox Security Defense for macOS Apple Silicon.*
+> **Native macOS graphical application for secure file inspection, behavioral telemetry detection, and automated sandbox containment on Apple Silicon.**  
+> *Deterministic Rule Engine, Disposable UTM Virtualization, and Local LLM (qwen2.5-coder:3b via Ollama).*
 
 [![Aegis CI](https://github.com/gabrielemolino/Aegis/actions/workflows/ci.yml/badge.svg)](https://github.com/gabrielemolino/Aegis/actions/workflows/ci.yml)
 [![macOS Apple Silicon](https://img.shields.io/badge/Platform-macOS%20Apple%20Silicon-blue.svg)](https://developer.apple.com/)
-[![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
+[![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org)
 [![SwiftUI](https://img.shields.io/badge/UI-SwiftUI%20Native-teal.svg)](https://developer.apple.com/xcode/swiftui/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status: v0.7 Beta](https://img.shields.io/badge/Release-v0.7%20Beta%20Release-brightgreen.svg)](#8-roadmap-per-release)
-[![Tests: 50 Swift + 6 Python](https://img.shields.io/badge/Tests-56%20Passing-success.svg)](#6-risultati-della-suite-di-test-v07-end-to-end--bilinguismo)
+[![Status: v0.7 Beta](https://img.shields.io/badge/Release-v0.7%20Beta%20Release-brightgreen.svg)](#9-release-roadmap)
+[![Tests: 50 Swift + 6 Python](https://img.shields.io/badge/Tests-56%20Passing-success.svg)](#7-test-suite-results-v07-end-to-end--localization)
 
 ---
 
-## 📌 Indice dei Contenuti
-- [Clausola di Esonero di Responsabilità / Legal Disclaimer](#-clausola-di-esonero-di-responsabilità--legal-disclaimer)
-- [1. Obiettivo del Progetto](#1-obiettivo-del-progetto)
-- [2. Principi Non Negoziabili](#2-principi-non-negoziabili)
-- [3. Architettura Logica (v0.7)](#3-architettura-logica-v07)
-- [4. Struttura del Repository](#4-struttura-del-repository)
-- [5. Requisiti di Sistema](#5-requisiti-di-sistema)
-- [6. Compilazione ed Esecuzione](#6-compilazione-ed-esecuzione)
-- [7. Risultati della Suite di Test](#7-risultati-della-suite-di-test-v07-end-to-end--bilinguismo)
-- [8. Packaging & Distribuzione (.app, .dmg, .zip)](#8-packaging--distribuzione-standalone-macos-apple-silicon)
-- [9. Roadmap per Release](#9-roadmap-per-release)
-- [10. Risorse di Sicurezza e Collaborazione](#10-risorse-di-sicurezza-e-collaborazione)
+## 📌 Table of Contents
+- [⚠️ Limitation of Liability / Legal Disclaimer](#️-limitation-of-liability--legal-disclaimer)
+- [1. Project Overview](#1-project-overview)
+- [2. Non-Negotiable Principles](#2-non-negotiable-principles)
+- [3. Architecture Overview (v0.7)](#3-architecture-overview-v07)
+- [4. Repository Structure](#4-repository-structure)
+- [5. System Requirements](#5-system-requirements)
+- [6. Building and Running](#6-building-and-running)
+- [7. Test Suite Results (v0.7 End-to-End & Localization)](#7-test-suite-results-v07-end-to-end--localization)
+- [8. Packaging & Standalone Distribution (.app, .dmg, .zip)](#8-packaging--standalone-distribution-macos-apple-silicon)
+- [9. Release Roadmap](#9-release-roadmap)
+- [10. Security & Contribution Resources](#10-security--contribution-resources)
+- [11. License](#11-license)
 
 ---
 
-## ⚠️ Clausola di Esonero di Responsabilità / Legal Disclaimer
+## ⚠️ Limitation of Liability / Legal Disclaimer
 
-> **ITALIANO:**  
-> **L'autore e gli sviluppatori di Aegis declinano ogni responsabilità per l'uso che l'utente fa del software e per qualsiasi conseguenza, danno diretto o indiretto, perdita di dati o malfunzionamento del sistema che possa derivare dall'analisi, gestione o manipolazione di file potenzialmente malevoli o sconosciuti.**  
-> L'utente è l'unico ed esclusivo responsabile delle proprie azioni, dell'isolamento della propria infrastruttura e della conformità alle leggi vigenti in materia di sicurezza informatica. Il software è fornito "COSÌ COM'È" a scopo di ricerca difensiva, audit e analisi controllata.
->
 > **ENGLISH:**  
-> **The author and developers of Aegis disclaim all liability and responsibility for any use made of this software by the user, or for any consequences, direct or indirect damages, data loss, or system issues arising from analyzing, handling, or interacting with potentially malicious or unknown files.**  
-> The user assumes sole responsibility for their actions, environment isolation, and compliance with applicable cybersecurity regulations. The software is provided "AS IS" for defensive research, auditing, and controlled sandbox analysis.
+> **The author and developers of Aegis expressly disclaim any and all liability and responsibility for any use made of this software, or for any direct, indirect, incidental, special, or consequential damages, loss of data, system malfunctions, or security incidents arising from analyzing, handling, or interacting with potentially malicious, unknown, or hazardous files.**  
+> The user assumes sole and exclusive responsibility for their actions, for ensuring the strict isolation of their hardware and network infrastructure, and for compliance with all applicable cybersecurity and computer fraud laws. This software is provided strictly **"AS IS"** for educational, defensive research, security auditing, and controlled sandbox experimentation purposes.
+>
+> **ITALIANO:**  
+> **L'autore e gli sviluppatori di Aegis declinano ogni responsabilità per l'uso che l'utente fa del software e per qualsiasi conseguenza, danno diretto o indiretto, perdita di dati o malfunzionamento del sistema derivante dall'analisi, gestione o manipolazione di file potenzialmente malevoli o sconosciuti.**  
+> L'utente è l'unico ed esclusivo responsabile delle proprie azioni, dell'isolamento della propria infrastruttura e della conformità alle leggi vigenti in materia di sicurezza informatica. Il software è fornito "COSÌ COM'È" a scopo di ricerca difensiva, audit e analisi controllata.
 
 ---
 
-## 1. Obiettivo del Progetto
+## 1. Project Overview
 
-Aegis aiuta l'utente a verificare file o programmi scaricati da Internet all'interno di un ambiente di analisi isolato controllato (macchina virtuale UTM su Apple Silicon).
+**Aegis** empowers security researchers and macOS users to verify suspicious files and downloads in a strictly isolated, disposable environment (UTM virtualization on Apple Silicon).
 
-Combina controlli di sicurezza tradizionali, preflight rigoroso per l'isolamento host, telemetria comportamentale in ambiente guest usa-e-getta, contenimento automatico e un LLM locale opzionale (`qwen2.5-coder:3b` via Ollama) per la spiegazione guidata degli eventi e il mapping MITRE ATT&CK.
+It pairs traditional deterministic security rules with strict host preflight checks, ephemeral guest runtime telemetry, automated containment controls, and an optional local LLM (`qwen2.5-coder:3b` via Ollama) for semantic threat triage, MITRE ATT&CK mapping, and plain-language explanation of anomalous events.
 
-L'applicazione include **supporto bilingue nativo (Italiano / Inglese)** configurabile durante l'onboarding di installazione e modificabile in qualsiasi momento nella scheda Impostazioni.
-
----
-
-## 2. Principi Non Negoziabili
-
-1. **La sicurezza opera senza LLM:** Il motore deterministico di regole e il controller host intervengono autonomamente anche se l'LLM è offline, lento o soggetto a prompt injection.
-2. **Nessun privilegio shell per l'LLM:** L'LLM analizza e spiega eventi; non possiede accesso a shell interattive e non esegue comandi arbitrari.
-3. **Isolamento Massimo di Default:** Niente rete, niente cartelle host condivise, niente sincronizzazione degli appunti e nessun dispositivo USB passthrough.
-4. **Nessuna esecuzione implicita:** I file selezionati dall'utente vengono ispezionati staticamente sull'host calcolandone l'hash SHA-256 in modalità safe-read. Nessun file viene eseguito sul Mac host.
-5. **Nessun malware reale nel repository:** Il codice, i test e i workflow CI impiegano esclusivamente fixture e simulazioni innocue.
-6. **Policy Fail-Closed:** Se un prerequisito essenziale o lo stato di isolamento della VM non sono verificabili con certezza, l'ambiente viene marcato come `Verifica manuale richiesta` e l'analisi viene **bloccata**.
+The application includes **native bilingual support (Italian & English)**, configurable upon first launch in the Onboarding modal and changeable at any time in the Settings screen.
 
 ---
 
-## 3. Architettura Logica (v0.7)
+## 2. Non-Negotiable Principles
+
+1. **Safety Operates Without LLM:** Deterministic rule evaluation and host containment execute independently. The core defense system functions fully even if the LLM is offline, high-latency, or targeted by prompt injection.
+2. **Zero Shell Privileges for the LLM:** The LLM is strictly an analytical observer. It never possesses interactive shell access, privileged sockets, or operating system execution capabilities.
+3. **Maximum Default Isolation:** No network connectivity, no shared host folders, no shared clipboard, and no USB passthrough.
+4. **No Implicit Host Execution:** Target files undergo static cryptographic inspection (SHA-256) on the macOS host via safe read-only operations. No sample is ever executed on the host Mac.
+5. **Zero Real Malware in Repository:** Repository code, unit tests, and continuous integration pipelines use exclusively synthetic benign fixtures and controlled simulations.
+6. **Fail-Closed Policy:** If any security prerequisite or VM isolation state cannot be deterministically verified, the environment is marked as `Manual Verification Required` and analysis is **blocked**.
+
+---
+
+## 3. Architecture Overview (v0.7)
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Host macOS (Apple Silicon)                 │
 │                                                                 │
 │  ┌────────────────────────┐         ┌────────────────────────┐  │
-│  │   Aegis SwiftUI App    │         │   Audit Logger Locale  │  │
-│  │ • Dashboard Panoramica │         │ • Immutabile           │  │
-│  │ • Onboarding Bilingue  ├─────────▶ • Sanificato           │  │
-│  │ • Selettore File Sicuro│         │ • Export JSON / Testo  │  │
-│  │ • Esonero Responsabilit│         └────────────────────────┘  │
+│  │   Aegis SwiftUI App    │         │   Local Audit Logger   │  │
+│  │ • Overview Dashboard   │         │ • Append-Only          │  │
+│  │ • Bilingual Onboarding ├─────────▶ • Sanitized            │  │
+│  │ • Safe File Selector   │         │ • JSON / Text Export   │  │
+│  │ • Legal Disclaimer Card│         └────────────────────────┘  │
 │  └───────────┬────────────┘                                     │
 │              │                                                  │
 │              ▼                                                  │
 │  ┌────────────────────────┐         ┌────────────────────────┐  │
 │  │   SecurityEngine Host  │         │ Local LLM (Ollama)     │  │
-│  │ • Calcolo SHA-256 puro │         │ • Modello:             │  │
-│  │ • Regole deterministiche◀──────────  qwen2.5-coder:3b     │  │
-│  │ • Controlli Preflight  │         │ • Schema JSON rigido   │  │
-│  │ • Contenimento VM      │         │ • Mapping MITRE ATT&CK │  │
-│  └───────────┬────────────┘         │ • Anti-Prompt Injection│  │
-│              │                      │ • Anti-Allucinazione   │  │
-│              │                      └────────────────────────┘  │
-└──────────────┼──────────────────────────────────────────────────┘
-               │ Nessuna condivisione cartelle / Nessuna rete / Fail-Closed
-               ▼
+│  │ • Pure SHA-256 Hashing │         │ • Model:               │  │
+│  │ • Deterministic Rules  ◀───────────  qwen2.5-coder:3b     │  │
+│  │ • Preflight Verification         │ • Strict JSON Schema   │  │
+│  │ • Automated VM Contain ──┐       │ • MITRE ATT&CK Mapping │  │
+│  └────────────────────────┘ │       │ • Anti-Prompt Injection│  │
+│                             │       │ • Anti-Hallucination   │  │
+│                             │       └────────────────────────┘  │
+└─────────────────────────────┼───────────────────────────────────┘
+                              │ Host Controller (No shared folders / No LAN / Fail-Closed)
+                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│              UTM Isolated Sandbox (Guest Usa-e-getta)           │
+│              UTM Isolated Sandbox (Disposable Guest)            │
 │                                                                 │
-│  • VM Designata: SentinelAI-Ubuntu-Guest                        │
-│  • Sensore Telemetrico: sentinel_guest_sensor.py (Python 3)     │
-│  • Ingestione: Stream JSONL unidirezionale                      │
-│  • Ripristino automatico da Snapshot pulito                     │
+│  • Authorized VM: SentinelAI-Ubuntu-Guest                       │
+│  • Guest Agent: sentinel_guest_sensor.py (Python 3 stdlib)     │
+│  • Ingestion: Unidirectional JSONL Telemetry Stream             │
+│  • Automatic Rollback from Clean Snapshot ('clean-baseline')    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 4. Struttura del Repository
+## 4. Repository Structure
 
 ```text
 Aegis/
 ├── .github/
-│   ├── workflows/ci.yml           # GitHub Actions CI (macOS-14 Apple Silicon)
-│   └── ISSUE_TEMPLATE/            # Template ufficiali per bug report e feature request
-├── Sources/SentinelAI/            # Sorgenti dell'applicazione macOS nativa
-│   ├── App/                       # Entry point, AppState e ciclo di vita SwiftUI
-│   ├── Models/                    # Schemi di telemetria, report e MITRE ATT&CK
+│   ├── workflows/ci.yml           # GitHub Actions CI (macOS-14 Apple Silicon, Xcode 16)
+│   └── ISSUE_TEMPLATE/            # Standard bug report, feature request & config
+├── Sources/SentinelAI/            # Native macOS Application Sources (SwiftUI & Swift 6)
+│   ├── App/                       # Entry point, AppState, and application lifecycle
+│   ├── Models/                    # Telemetry event schemas, reports, and MITRE models
 │   ├── Services/
-│   │   ├── LocalizationManager.swift # Gestore bilinguismo reattivo (IT/EN)
-│   │   ├── SecurityEngine.swift   # Motore deterministico e policy di contenimento
-│   │   ├── VMHostController.swift # Controller host per VM UTM e query watchdog
-│   │   ├── LocalLLMService.swift  # Servizio LLM locale (Ollama qwen2.5-coder:3b)
-│   │   ├── TelemetryIngestionService.swift # Ingestione e convalida stream JSONL
-│   │   ├── SystemCheckService.swift # Sanity check ambiente e architettura host
-│   │   └── AuditLogger.swift      # Audit logging sanificato ed esportazione
-│   └── Views/                     # Componenti visuali SwiftUI
+│   │   ├── LocalizationManager.swift # Reactive bilingual manager (IT / EN)
+│   │   ├── SecurityEngine.swift   # Deterministic rules & containment orchestrator
+│   │   ├── VMHostController.swift # UTM AppleScript controller & watchdog probe
+│   │   ├── LocalLLMService.swift  # Local LLM service (Ollama qwen2.5-coder:3b)
+│   │   ├── TelemetryIngestionService.swift # Safe JSONL stream parser & validator
+│   │   ├── SystemCheckService.swift # Host environment & architecture sanity checks
+│   │   └── AuditLogger.swift      # Sanitized immutable log exporter (JSON / text)
+│   └── Views/                     # Native SwiftUI reactive interface
 │       ├── Navigation/SidebarView.swift
-│       └── Screens/               # Panoramica, UTM Wizard, Banco Regole, LLM, Impostazioni
-├── Tests/SentinelAITests/         # 50 Test Swift unitari, di sicurezza ed E2E
-├── guest-sensor/                  # Sensore di telemetria per Ubuntu Guest (Python 3)
-│   ├── sentinel_guest_sensor.py   # Rilevamento processi, burst I/O e rete
-│   └── test_sensor.py             # 6 Test di validazione telemetrica
+│       └── Screens/               # Overview, UTM Manager, Rule Workbench, LLM, Settings
+├── Tests/SentinelAITests/         # 50 Swift Unit, Integration & End-to-End Tests
+├── guest-sensor/                  # Python 3 telemetry agent for Ubuntu ARM64 Guest
+│   ├── sentinel_guest_sensor.py   # Process spawn, burst I/O & egress network monitor
+│   └── test_sensor.py             # 6 Telemetry validation unit tests
 ├── scripts/
-│   └── package_macos.sh           # Script di build release e packaging (.app, .dmg, .zip)
-├── CONTRIBUTING.md                # Linee guida per collaboratori e policy zero-malware
-├── SECURITY.md                    # Politica di sicurezza, disclosure ed esonero legale
-├── THREAT_MODEL.md                # Modello di minaccia formale STRIDE e confini di sicurezza
-├── LICENSE                        # Licenza MIT
-└── Package.swift                  # Manifest di compilazione Swift Package Manager
+│   └── package_macos.sh           # Standalone packaging script (.app, .dmg, .zip)
+├── CONTRIBUTING.md                # Contributor guidelines & zero-malware policy
+├── SECURITY.md                    # Security policy, responsible disclosure & disclaimer
+├── THREAT_MODEL.md                # Formal STRIDE threat model & isolation boundaries
+├── LICENSE                        # MIT License
+└── Package.swift                  # Swift Package Manager manifest (Swift 6.0+)
 ```
 
 ---
 
-## 5. Requisiti di Sistema
+## 5. System Requirements
 
-- **Piattaforma:** macOS 14 (Sonoma) o successivo su Apple Silicon (M1 / M2 / M3 / M4 / M5).
-- **Toolchain:** Swift 6.0+ o Xcode 16+.
-- **Sandbox Guest:** [UTM Virtual Machines per macOS](https://mac.getutm.app/).
-- **Analista LLM Locale (Opzionale v0.6):** [Ollama](https://ollama.com/) con modello `qwen2.5-coder:3b`.
+- **Operating System:** macOS 14 (Sonoma) or newer on **Apple Silicon** (M1 / M2 / M3 / M4 / M5).
+- **Toolchain:** Swift 6.0+ or Xcode 16.0+.
+- **Guest Sandbox:** [UTM Virtual Machines for macOS](https://mac.getutm.app/) (Free / Open-Source).
+- **Local LLM Analyst (Optional):** [Ollama](https://ollama.com/) with model `qwen2.5-coder:3b`.
   ```bash
-  # Installazione Ollama tramite Homebrew
+  # Install Ollama via Homebrew
   brew install ollama
+  brew services start ollama
   
-  # Download ed esecuzione del modello ottimizzato per Apple Silicon 8GB
+  # Pull the lightweight model optimized for 8GB / 16GB Apple Silicon
   ollama pull qwen2.5-coder:3b
-  ollama run qwen2.5-coder:3b
   ```
 
 ---
 
-## 6. Compilazione ed Esecuzione
+## 6. Building and Running
 
 ```bash
-# Spostati nella cartella del progetto
-cd SentinelAI
+# 1. Clone the repository
+git clone https://github.com/gabrielemolino/Aegis.git
+cd Aegis
 
-# Compila l'applicazione con Swift Package Manager
+# 2. Build in debug mode
 swift build
 
-# Esegui la suite completa di test unitari e di policy
+# 3. Run all unit and integration tests (50 tests)
 swift test
 
-# Avvia l'applicazione nativa
+# 4. Launch the native SwiftUI application
 swift run SentinelAI
 ```
 
 ---
 
-## 7. Risultati della Suite di Test v0.7 (End-to-End & Bilinguismo)
+## 7. Test Suite Results (v0.7 End-to-End & Localization)
 
-Tutti i 50 test unitari, deterministici, di sicurezza, di integrazione LLM e di localizzazione bilingue sono eseguiti in locale e verificati:
+All 50 Swift tests and 6 Python guest sensor tests run locally and in GitHub Actions CI with **0 failures**:
 
 ```text
 ✔ Test "Bilinguismo Reattivo (Italiano & Inglese): Commutazione lingua istantanea e coerenza dizionario" passed
@@ -232,48 +234,46 @@ Executed 6 Python sensor validation tests with 0 failures in 2.548 seconds.
 
 ---
 
-## 8. Packaging & Distribuzione Standalone (macOS Apple Silicon)
+## 8. Packaging & Standalone Distribution (macOS Apple Silicon)
 
-Aegis v0.7 include uno script automatizzato per compilare e impacchettare l'applicazione in un bundle `.app` nativo firmato ad-hoc, oltre alla creazione di un archivio ZIP e di un'immagine disco DMG:
+Aegis includes an automated script to compile release binaries and generate an ad-hoc signed `.app` bundle, a compressed ZIP archive, and a mountable DMG disk image:
 
 ```bash
-# Compilazione ed esportazione bundle Aegis.app, ZIP e DMG
+# Package Aegis.app, ZIP archive, and DMG disk image
 chmod +x scripts/package_macos.sh
 ./scripts/package_macos.sh
 ```
 
-I file generati nella cartella `dist/`:
-- `dist/Aegis.app` — Bundle applicativo macOS nativo con `Info.plist` (Sonoma 14.0+) e firma ad-hoc arm64.
-- `dist/Aegis-v0.7.0-macOS-arm64.zip` — Archivio compresso per distribuzione diretta.
-- `dist/Aegis-v0.7.0-macOS-arm64.dmg` — Immagine disco macOS con mount rapido per installazione in `/Applications`.
+Distribution artifacts generated in `dist/`:
+- `dist/Aegis.app` — Standalone native macOS app bundle with `Info.plist` (macOS 14.0+) and ad-hoc arm64 code signature.
+- `dist/Aegis-v0.7.0-macOS-arm64.zip` — Compressed archive for direct distribution.
+- `dist/Aegis-v0.7.0-macOS-arm64.dmg` — Mountable macOS disk image for drag-and-drop installation into `/Applications`.
 
 ---
 
-## 9. Roadmap per Release
+## 9. Release Roadmap
 
-| Milestone | Descrizione | Stato |
-| :--- | :--- | :--- |
-| **v0.1** | UI nativa SwiftUI, dashboard, navigazione, onboarding, preflight fail-closed, motore simulato, audit log. | **Completato** |
-| **v0.2** | Gestione guidata UTM: wizard interattivo 5 passi, indurimento (rete, clipboard, cartelle, USB), query con watchdog timeout, policy bonifica snapshot ('clean-baseline'). | **Completato** |
-| **v0.3** | Motore di regole deterministico completo con catalogo versionato, parser eventi, 6 dataset fixture sintetiche, banco di prova interattivo ed evidenze con ID evento. | **Completato** |
-| **v0.4** | Controllo VM: controller host per la sola VM autorizzata, divieto VM estranee, conferma reale dell'arresto (zero falsi successi), obbligo rollback post-contenimento. | **Completato** |
-| **v0.5** | Sensore guest Python 3 su Ubuntu ARM64 (processi, file, rete, heartbeat), ingestione sicura JSONL, analisi reale non simulata. | **Completato** |
-| **v0.6** | Integrazione LLM locale con Ollama (`qwen2.5-coder:3b`), spiegazione semantica, mapping MITRE ATT&CK, validazione JSON rigida, anti-allucinazione evidenze, fail-closed fallback. | **Completato** |
-| **v0.7** | Rebranding ad **Aegis**, localizzazione bilingue reattiva (IT/EN all'onboarding e nelle impostazioni), clausola esplicita di non responsabilità, test suite end-to-end (50 test) e packaging standalone `.app` / `.dmg` per macOS. | **Completato** |
-
----
-
-## 10. Risorse di Sicurezza e Collaborazione
-
-- [THREAT_MODEL.md](THREAT_MODEL.md) — Analisi dettagliata delle minacce STRIDE, vettori di attacco considerati e mitigazioni.
-- [SECURITY.md](SECURITY.md) — Politica di sicurezza, disclosure responsabile e limitazione di responsabilità legale.
-- [CONTRIBUTING.md](CONTRIBUTING.md) — Linee guida per contribuire, convenzioni sul bilinguismo e divieto assoluto di malware reale.
+| Milestone | Description | Status |
+| :--- | :--- | :---: |
+| **v0.1** | Native SwiftUI UI, dashboard, navigation, onboarding, fail-closed preflight, simulated engine, audit log. | **Completed** |
+| **v0.2** | UTM guided management: 5-step wizard, hardening (network, clipboard, folders, USB), query timeout, rollback policy ('clean-baseline'). | **Completed** |
+| **v0.3** | Complete deterministic rule engine with versioned catalog, event parser, 6 synthetic datasets, interactive workbench, and evidence linking. | **Completed** |
+| **v0.4** | VM host controller: authorized VM whitelist, unauthorized target rejection, real shutdown verification, post-containment rollback enforcement. | **Completed** |
+| **v0.5** | Python 3 guest telemetry sensor on Ubuntu ARM64 (processes, burst I/O, network egress, heartbeat), safe JSONL ingestion, non-simulated analysis. | **Completed** |
+| **v0.6** | Local LLM integration with Ollama (`qwen2.5-coder:3b`), semantic triage, MITRE ATT&CK mapping, rigid JSON schema validation, anti-hallucination evidence guard, fail-closed fallback. | **Completed** |
+| **v0.7** | Rebranded to **Aegis**, reactive bilingual localization (Italian / English in onboarding & settings), legal disclaimer & limitation of liability clause, end-to-end test suite (50 tests), and standalone macOS `.app` / `.dmg` packaging. | **Completed** |
 
 ---
 
-## 11. Licenza
+## 10. Security & Contribution Resources
 
-Rilasciato sotto licenza [MIT](LICENSE).
+- [THREAT_MODEL.md](THREAT_MODEL.md) — Detailed STRIDE threat analysis, trust boundaries, considered attack vectors, and mitigations.
+- [SECURITY.md](SECURITY.md) — Security policy, responsible vulnerability disclosure process, and limitation of liability.
+- [CONTRIBUTING.md](CONTRIBUTING.md) — Contribution guidelines, bilingual dictionary conventions, and strict zero-malware policy.
+
+---
+
+## 11. License
+
+Released under the [MIT License](LICENSE).  
 Copyright (c) 2026 Aegis Contributors.
-
-

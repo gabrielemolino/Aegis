@@ -1,65 +1,65 @@
-# Guida per i Collaboratori / Contributing to Aegis
+# Contributing to Aegis
 
-Grazie per il tuo interesse nel contribuire ad **Aegis**!
+Thank you for your interest in contributing to **Aegis**!
 
-Aegis è un progetto open source progettato per l'analisi sicura e il contenimento in sandbox su macOS Apple Silicon. Per preservare l'integrità del progetto e la sicurezza di tutti gli utenti, ogni contributo deve rispettare tassativamente le linee guida seguenti.
-
----
-
-## 1. Principi di Sicurezza Non Negoziabili
-
-Qualsiasi pull request deve soddisfare e non compromettere i 6 principi cardine:
-
-1. **La sicurezza opera senza LLM:** Il motore deterministico di regole e il contenimento host intervengono autonomamente e non dipendono dall'LLM locale.
-2. **Nessun privilegio shell per l'LLM:** L'LLM spiega gli eventi; non riceve mai socket, shell o comandi di sistema.
-3. **Isolamento Massimo di Default:** Zero rete, zero cartelle host condivise, zero clipboard condivisa, zero passthrough USB.
-4. **Nessuna esecuzione implicita sull'host:** L'ispezione preliminare dei file sull'host è puramente crittografica (calcolo hash SHA-256 in safe-read).
-5. **NESSUN MALWARE REALE NEL REPOSITORY:** È severamente vietato effettuare commit o pull request contenenti eseguibili dannosi, payload binari ostili o codice malevolo reale. Utilizzare **esclusivamente** stringhe sintetiche, fixture JSONL o script innocui di simulazione controllata.
-6. **Policy Fail-Closed:** In caso di errore o incertezza su prerequisiti o isolamento, l'analisi deve essere bloccata.
+Aegis is an open-source security tool designed for safe file inspection and sandbox containment on macOS Apple Silicon. To preserve the integrity and security of the project, all contributions must strictly adhere to the following guidelines.
 
 ---
 
-## 2. Flusso di Sviluppo Locale
+## 1. Non-Negotiable Security Principles
 
-### Requisiti
-- macOS Sonoma (14.0+) su Apple Silicon (M1/M2/M3/M4/M5).
-- Xcode 16+ o Swift 6.0+ toolchain.
-- Python 3.10+ (per il sensore guest).
-- [Ollama](https://ollama.com/) con modello `qwen2.5-coder:3b` (opzionale per test semantici LLM).
+Any contribution or pull request must uphold the 6 fundamental principles:
 
-### Istruzioni di compilazione e test
+1. **Safety Operates Without LLM:** Deterministic rule evaluation and host containment execute independently. The core defense system functions fully even if the LLM is offline or high-latency.
+2. **Zero Shell Privileges for the LLM:** The LLM is strictly an analytical observer. It never receives interactive shell access, privileged sockets, or execution rights.
+3. **Maximum Default Isolation:** No network connectivity, no shared host folders, no shared clipboard, and no USB passthrough.
+4. **No Implicit Host Execution:** Target files undergo cryptographic inspection (SHA-256) on the host macOS via safe read-only operations. No sample is ever executed on the host Mac.
+5. **ZERO REAL MALWARE IN REPOSITORY:** It is strictly prohibited to commit or open pull requests containing hostile binaries, functional exploits, or real malware payloads. Use **strictly synthetic** event strings, JSONL fixtures, or benign simulation scripts.
+6. **Fail-Closed Policy:** If any security prerequisite or VM isolation state cannot be deterministically verified, the analysis must be blocked.
+
+---
+
+## 2. Local Development Workflow
+
+### Requirements
+- macOS 14 (Sonoma) or newer on Apple Silicon (M1/M2/M3/M4/M5).
+- Xcode 16.0+ or Swift 6.0+ toolchain.
+- Python 3.10+ (for the guest sensor).
+- [Ollama](https://ollama.com/) with model `qwen2.5-coder:3b` (optional for local LLM evaluation).
+
+### Build and Test Instructions
 ```bash
-# 1. Clona il repository
+# 1. Clone your fork of the repository
 git clone https://github.com/gabrielemolino/Aegis.git
 cd Aegis
 
-# 2. Compila in modalità debug
+# 2. Build in debug mode
 swift build
 
-# 3. Esegui la suite completa di test (50 test unitari ed E2E)
+# 3. Run the complete test suite (50 Swift unit & E2E tests)
 swift test
 
-# 4. Esegui i test del sensore guest Python
+# 4. Run the guest sensor validation tests (Python 3)
 python3 guest-sensor/test_sensor.py
 
-# 5. Verifica il packaging macOS (.app, .dmg, .zip)
+# 5. Verify the standalone macOS packaging script (.app, .dmg, .zip)
 ./scripts/package_macos.sh
 ```
 
 ---
 
-## 3. Supporto Bilingue (Italiano / English)
+## 3. Bilingual Support (English & Italian)
 
-Aegis supporta nativamente sia l'**Italiano** che l'**Inglese**.  
-Se introduci nuove etichette, bottoni o testi nell'interfaccia SwiftUI:
-- Aggiungi la chiave sia al dizionario `.italian` che al dizionario `.english` in [`LocalizationManager.swift`](Sources/SentinelAI/Services/LocalizationManager.swift).
-- Richiama il testo nelle viste SwiftUI tramite `LocalizationManager.shared.t("chiave")`.
+Aegis provides native bilingual UI localization.  
+When adding or updating user-facing UI labels, buttons, or error messages:
+- Add the corresponding key to both the `.english` and `.italian` dictionaries in [`LocalizationManager.swift`](Sources/SentinelAI/Services/LocalizationManager.swift).
+- Reference the string in SwiftUI views via `LocalizationManager.shared.t("your_key")`.
 
 ---
 
-## 4. Linee Guida per le Pull Request
+## 4. Pull Request Guidelines
 
-1. Crea un branch descrittivo: `feature/nome-funzionalita` o `fix/descrizione-bug`.
-2. Aggiungi test specifici per qualsiasi nuova regola deterministica o servizio.
-3. Verifica che tutti i 50 test Swift e i 6 test Python passino con zero fallimenti.
-4. Apri la Pull Request descrivendo motivazione tecnica, impatto sull'isolamento e test eseguiti.
+1. Create a descriptive feature branch: `feature/your-feature-name` or `fix/issue-description`.
+2. Write unit tests for any new deterministic rules, telemetry parsers, or services.
+3. Verify that all 50 Swift tests and 6 Python tests pass locally with **zero failures**.
+4. Submit the Pull Request referencing any relevant issues, explaining the defensive rationale and isolation impact.

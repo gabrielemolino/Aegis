@@ -1,25 +1,23 @@
 ---
-name: Proposta Funzionalità / Feature Request
-about: Suggerisci una nuova regola deterministica, miglioramento sandbox o funzionalità per Aegis
+name: Feature Request
+about: Suggest a new deterministic rule, sandbox improvement, or defensive feature for Aegis
 title: "[FEATURE] "
 labels: ["enhancement"]
 assignees: []
 ---
 
-## Obiettivo della Funzionalità / Feature Goal
-Descrivi chiaramente l'obiettivo difensivo o di usabilità che questa funzionalità intende raggiungere.
-*Describe clearly the defensive or usability objective of this feature.*
+## Feature Goal
+Describe clearly the defensive or usability objective this feature addresses.
 
-## Relazione con i Principi di Sicurezza Non Negoziabili
-Indica come la proposta rispetta:
-1. **La sicurezza opera senza LLM** (il motore deterministico ha sempre la priorità).
-2. **Nessun privilegio shell per l'LLM** (l'LLM analizza solo dati passivi).
-3. **Isolamento Massimo di Default** (Fail-Closed, zero cartelle condivise, zero rete).
-4. **Nessun malware reale nel repository**.
+## Compliance with Non-Negotiable Principles
+Explain how this proposal respects:
+1. **Safety operates without LLM** (the deterministic engine always takes precedence).
+2. **Zero shell privileges for LLM** (the LLM observes passive data only).
+3. **Maximum default isolation** (Fail-Closed, no network, no shared folders).
+4. **Zero real malware in repository**.
 
-## Soluzione o Approccio Proposto / Proposed Approach
-Come immagini l'implementazione o l'interazione utente in SwiftUI o nel sensore guest.
-*How you envision the implementation or user interaction.*
+## Proposed Solution / Technical Approach
+Describe how you envision the implementation in SwiftUI, the host controller, or the guest sensor.
 
-## Alternative Considerate / Alternatives Considered
-Eventuali approcci alternativi valutati.
+## Alternatives Considered
+Any alternative approaches or workarounds evaluated.
