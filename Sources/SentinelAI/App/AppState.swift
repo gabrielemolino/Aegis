@@ -49,10 +49,20 @@ public final class AppState: ObservableObject {
         let prereqs = systemCheckService.inspectEnvironment()
         self.prerequisites = prereqs
         
+        // Carica la configurazione UTM persistita (Milestone v0.2)
+        let utmConfig = UTMManagementService.shared.loadConfiguration()
+        self.prerequisites.authorizedVMName = utmConfig.vmName
+        self.isolationChecklist.vmNetworkDisconnected = utmConfig.isNetworkIsolated
+        self.isolationChecklist.hostFolderSharingDisabled = utmConfig.isFolderSharingDisabled
+        self.isolationChecklist.sharedClipboardDisabled = utmConfig.isClipboardSharingDisabled
+        self.isolationChecklist.noUsbPassthrough = utmConfig.isUsbPassthroughDisabled
+        self.isolationChecklist.cleanSnapshotVerified = utmConfig.hasCleanSnapshot
+        
         // Determina lo stato iniziale della Sandbox UTM
-        if prereqs.isUTMInstalled {
-            // Se UTM è installato ma la VM autorizzata non è ancora stata creata/verificata:
-            self.vmStatus = .notConfigured
+        if prereqs.isUTMInstalled && utmConfig.isFullyHardened {
+            self.vmStatus = .verified
+        } else if prereqs.isUTMInstalled {
+            self.vmStatus = .manualVerificationRequired
         } else {
             self.vmStatus = .notConfigured
         }

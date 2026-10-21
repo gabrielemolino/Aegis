@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct SandboxView: View {
     @ObservedObject var appState: AppState
+    @State private var showUTMWizard: Bool = false
     
     public init(appState: AppState) {
         self.appState = appState
@@ -22,25 +23,43 @@ public struct SandboxView: View {
                     }
                     Spacer()
                     
-                    Button(action: {
-                        appState.refreshEnvironment()
-                    }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                            Text("Riesamina Sistema")
+                    HStack(spacing: 8) {
+                        Button(action: {
+                            showUTMWizard = true
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "wand.and.stars")
+                                Text("Wizard Configurazione UTM")
+                            }
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(Theme.bgDeep)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Theme.accentTealBright)
+                            .cornerRadius(6)
                         }
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(Theme.textPrimary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Theme.surfaceElevated)
-                        .cornerRadius(6)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Theme.borderDefault, lineWidth: 1)
-                        )
+                        .buttonStyle(.plain)
+                        
+                        Button(action: {
+                            appState.refreshEnvironment()
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "arrow.triangle.2.circlepath")
+                                Text("Riesamina")
+                            }
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(Theme.textPrimary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Theme.surfaceElevated)
+                            .cornerRadius(6)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(Theme.borderDefault, lineWidth: 1)
+                            )
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
                 
                 // Card 1: Prerequisiti Hardware & Host
@@ -227,17 +246,17 @@ public struct SandboxView: View {
                         Spacer()
                         
                         Button(action: {
-                            appState.toggleManualVerificationForSnapshot()
+                            showUTMWizard = true
                         }) {
                             HStack(spacing: 6) {
-                                Image(systemName: appState.isolationChecklist.cleanSnapshotVerified ? "checkmark.circle" : "hand.tap.fill")
-                                Text(appState.isolationChecklist.cleanSnapshotVerified ? "Conferma Registrata" : "Attesta Verifica Manuale")
+                                Image(systemName: "slider.horizontal.3")
+                                Text("Apri Wizard Hardening")
                             }
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(appState.isolationChecklist.cleanSnapshotVerified ? Theme.accentTealBright : Theme.warningAmber)
+                            .foregroundColor(Theme.accentTealBright)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(appState.isolationChecklist.cleanSnapshotVerified ? Theme.accentTealSubtle : Theme.warningAmberSubtle)
+                            .background(Theme.accentTealSubtle)
                             .cornerRadius(6)
                         }
                         .buttonStyle(.plain)
@@ -251,9 +270,20 @@ public struct SandboxView: View {
                     RoundedRectangle(cornerRadius: Theme.cardCornerRadius)
                         .stroke(Theme.borderDefault, lineWidth: 1)
                 )
+                
+                // Card 4: Regola Non Negoziabile sulla Sospensione vs Bonifica
+                BannerAlertView(
+                    title: "Regola Non Negoziabile: Sospensione vs Bonifica",
+                    message: UTMBonificaPolicy.suspensionCaveat,
+                    level: .warning
+                )
             }
             .padding(24)
         }
         .background(Theme.bgDeep)
+        .sheet(isPresented: $showUTMWizard) {
+            UTMSetupWizardView(appState: appState)
+        }
     }
 }
+

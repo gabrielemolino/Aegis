@@ -113,7 +113,12 @@ Tutti i test unitari e di sicurezza sono eseguiti in locale e verificati:
 ✔ Test "Verifica compatibilità versione macOS" passed
 ✔ Test "Verifica ispezione ambiente iniziale" passed
 ✔ Test "Verifica esportazione in formato testo" passed
-Executed 16 tests, with 0 failures in 0.006 seconds.
+✔ Test "Validazione nome VM: accetta identificatori conformi" passed
+✔ Test "Validazione nome VM: rifiuta injection, caratteri speciali e traversal" passed
+✔ Test "Hardening Checklist: richiede tassativamente tutti i 5 criteri di isolamento" passed
+✔ Test "Policy Bonifica: la sospensione conserva lo stato compromesso e non è bonifica" passed
+✔ Test "Interrogazione stato VM: timeout di sicurezza non bloccante" passed
+Executed 21 tests, with 0 failures in 0.216 seconds.
 ```
 
 ---
@@ -123,9 +128,9 @@ Executed 16 tests, with 0 failures in 0.006 seconds.
 | Milestone | Descrizione | Stato |
 | :--- | :--- | :--- |
 | **v0.1** | UI nativa SwiftUI, dashboard, navigazione, onboarding, preflight fail-closed, motore simulato, audit log. | **Completato** |
-| **v0.2** | Gestione guidata UTM: verifica installazione, checklist interattiva e guida creazione snapshot. | Prossimo passo |
-| **v0.3** | Motore di regole deterministico completo con parser eventi e fixture arricchite. | Pianificato |
-| **v0.4** | Controllo host limitato per avvio/arresto esclusivo della VM designata. | Pianificato |
+| **v0.2** | Gestione guidata UTM: wizard interattivo 5 passi, indurimento (rete, clipboard, cartelle, USB), query con watchdog timeout, policy bonifica snapshot ('clean-baseline'). | **Completato** |
+| **v0.3** | Motore di regole deterministico completo con parser eventi e fixture arricchite. | Prossimo passo |
+| **v0.4** | Controllo VM: controllo host limitato e verificato per avviare/fermare la sola VM autorizzata; test di errore e conferma dell'esito. | Pianificato |
 | **v0.5** | Sensore guest su Ubuntu ARM64 per telemetria di base (processi, file, rete). | Pianificato |
 | **v0.6** | Integrazione LLM locale con Ollama (spiegazione semantica con schema JSON validato). | Pianificato |
 | **v0.7** | Beta pubblica, test end-to-end con simulazioni innocue e packaging macOS. | Pianificato |
