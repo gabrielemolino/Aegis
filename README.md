@@ -118,7 +118,14 @@ Tutti i test unitari e di sicurezza sono eseguiti in locale e verificati:
 ✔ Test "Hardening Checklist: richiede tassativamente tutti i 5 criteri di isolamento" passed
 ✔ Test "Policy Bonifica: la sospensione conserva lo stato compromesso e non è bonifica" passed
 ✔ Test "Interrogazione stato VM: timeout di sicurezza non bloccante" passed
-Executed 21 tests, with 0 failures in 0.216 seconds.
+✔ Test "Catalogo regole: integrità e versionamento del catalogo" passed
+✔ Test "Regola Clean: ciclo di vita standard viene classificato come Non Rilevato" passed
+✔ Test "Regola I/O Burst (RULE-IO-014): rileva modifiche frequenti in /tmp con soglia configurabile" passed
+✔ Test "Regola Processi Figli (RULE-PROC-005): intercetta interpreti inattesi e associa ID evento" passed
+✔ Test "Regola Persistenza Critica (RULE-PERSIST-002): attiva raccomandazione arresto VM" passed
+✔ Test "Regola Heartbeat (RULE-HEARTBEAT-000): assenza di telemetria porta a stato degradato (Fail-Closed)" passed
+✔ Test "Regola Anti-Tamper (RULE-INJECT-001): prompt injection trattata rigorosamente come dato passivo" passed
+Executed 28 tests, with 0 failures in 0.195 seconds.
 ```
 
 ---
@@ -129,8 +136,8 @@ Executed 21 tests, with 0 failures in 0.216 seconds.
 | :--- | :--- | :--- |
 | **v0.1** | UI nativa SwiftUI, dashboard, navigazione, onboarding, preflight fail-closed, motore simulato, audit log. | **Completato** |
 | **v0.2** | Gestione guidata UTM: wizard interattivo 5 passi, indurimento (rete, clipboard, cartelle, USB), query con watchdog timeout, policy bonifica snapshot ('clean-baseline'). | **Completato** |
-| **v0.3** | Motore di regole deterministico completo con parser eventi e fixture arricchite. | Prossimo passo |
-| **v0.4** | Controllo VM: controllo host limitato e verificato per avviare/fermare la sola VM autorizzata; test di errore e conferma dell'esito. | Pianificato |
+| **v0.3** | Motore di regole deterministico completo con catalogo versionato, parser eventi, 6 dataset fixture sintetiche, banco di prova interattivo ed evidenze con ID evento. | **Completato** |
+| **v0.4** | Controllo VM: controllo host limitato e verificato per avviare/fermare la sola VM autorizzata; test di errore e conferma dell'esito. | Prossimo passo |
 | **v0.5** | Sensore guest su Ubuntu ARM64 per telemetria di base (processi, file, rete). | Pianificato |
 | **v0.6** | Integrazione LLM locale con Ollama (spiegazione semantica con schema JSON validato). | Pianificato |
 | **v0.7** | Beta pubblica, test end-to-end con simulazioni innocue e packaging macOS. | Pianificato |

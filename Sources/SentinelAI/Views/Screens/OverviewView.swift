@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct OverviewView: View {
     @ObservedObject var appState: AppState
+    @State private var showRuleCatalogModal: Bool = false
     
     public init(appState: AppState) {
         self.appState = appState
@@ -70,11 +71,15 @@ public struct OverviewView: View {
                     // Card 2: Motore Regole
                     MetricCardView(
                         title: "Motore di Rilevamento",
-                        value: "\(appState.ruleCount) Regole Attive",
-                        detail: "Versione: \(appState.ruleEngineVersion). Motore deterministico indipendente da LLM.",
+                        value: "\(RuleEngineService.shared.rulesCatalog.count) Regole Versionate",
+                        detail: "Versione: \(RuleEngineService.shared.engineVersion). Valutazione deterministica su eventi fixture.",
                         icon: "bolt.shield.fill",
                         badgeText: "Deterministico",
-                        badgeStyle: .verified
+                        badgeStyle: .verified,
+                        actionTitle: "Esplora catalogo regole →",
+                        action: {
+                            showRuleCatalogModal = true
+                        }
                     )
                     
                     // Card 3: Analista AI
@@ -237,5 +242,8 @@ public struct OverviewView: View {
             .padding(24)
         }
         .background(Theme.bgDeep)
+        .sheet(isPresented: $showRuleCatalogModal) {
+            RuleCatalogView(appState: appState)
+        }
     }
 }

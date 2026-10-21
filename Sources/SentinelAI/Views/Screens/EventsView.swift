@@ -8,6 +8,7 @@ public struct EventsView: View {
     @State private var selectedCategory: AuditCategory = .all
     @State private var searchText: String = ""
     @State private var exportNotificationMessage: String? = nil
+    @State private var showRuleCatalogSheet: Bool = false
     
     public init(appState: AppState) {
         self.appState = appState
@@ -40,6 +41,22 @@ public struct EventsView: View {
                 
                 HStack(spacing: 8) {
                     Button(action: {
+                        showRuleCatalogSheet = true
+                    }) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "bolt.shield.fill")
+                            Text("Catalogo & Fixture")
+                        }
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(Theme.accentTealBright)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Theme.accentTealSubtle)
+                        .cornerRadius(6)
+                    }
+                    .buttonStyle(.plain)
+                    
+                    Button(action: {
                         copyLogToClipboard()
                     }) {
                         HStack(spacing: 6) {
@@ -60,7 +77,7 @@ public struct EventsView: View {
                     }) {
                         HStack(spacing: 6) {
                             Image(systemName: "square.and.arrow.up")
-                            Text("Esporta Report JSON")
+                            Text("Esporta JSON")
                         }
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(Theme.bgDeep)
@@ -198,6 +215,9 @@ public struct EventsView: View {
             }
         }
         .background(Theme.bgDeep)
+        .sheet(isPresented: $showRuleCatalogSheet) {
+            RuleCatalogView(appState: appState)
+        }
     }
     
     private func copyLogToClipboard() {
