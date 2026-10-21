@@ -88,6 +88,7 @@ public struct AnalysisReport: Identifiable, Codable, Sendable {
     public var actionsExecuted: [ContainmentAction]
     public var limitations: [String]
     public var isSimulatedDemo: Bool
+    public var llmAnalysis: LLMAnalysisReport?
     
     public init(
         id: UUID = UUID(),
@@ -100,7 +101,8 @@ public struct AnalysisReport: Identifiable, Codable, Sendable {
         rulesTriggered: [RuleTrigger],
         actionsExecuted: [ContainmentAction],
         limitations: [String],
-        isSimulatedDemo: Bool = true
+        isSimulatedDemo: Bool = true,
+        llmAnalysis: LLMAnalysisReport? = nil
     ) {
         self.id = id
         self.date = date
@@ -113,5 +115,6 @@ public struct AnalysisReport: Identifiable, Codable, Sendable {
         self.actionsExecuted = actionsExecuted
         self.limitations = limitations
         self.isSimulatedDemo = isSimulatedDemo
+        self.llmAnalysis = llmAnalysis
     }
 }

@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct OverviewView: View {
     @ObservedObject var appState: AppState
+    @ObservedObject private var llmService = LocalLLMService.shared
     @State private var showRuleCatalogModal: Bool = false
     
     public init(appState: AppState) {
@@ -82,15 +83,8 @@ public struct OverviewView: View {
                         }
                     )
                     
-                    // Card 3: Analista AI
-                    MetricCardView(
-                        title: "Analista AI Locale",
-                        value: "Non Configurato",
-                        detail: "Funzionalità opzionale (Ollama) pianificata per v0.6. Nessun invio dati al cloud.",
-                        icon: "brain.head.profile",
-                        badgeText: "Opzionale v0.6",
-                        badgeStyle: .notConfigured
-                    )
+                    // Card 3: Analista AI Locale
+                    llmCardView
                 }
                 
                 // Controlli di Sicurezza / Checklist Isolamento
@@ -246,4 +240,38 @@ public struct OverviewView: View {
             RuleCatalogView(appState: appState)
         }
     }
+    
+    // MARK: - Card 3: Analista AI Locale
+    
+    @ViewBuilder
+    private var llmCardView: some View {
+        let isReady = llmService.status == .ready
+        let isMock = llmService.config.isMockFallbackEnabled
+        let badgeText = isReady ? "Online" : (isMock ? "Mock v0.6" : "Offline")
+        let badgeStyle: StatusBadgeView.BadgeStyle = isReady ? .verified : (isMock ? .manualReview : .notConfigured)
+        
+        let detailText: String = {
+            if isReady {
+                return "Ollama attivo su :11434. Triage semantico locale e mapping MITRE ATT&CK."
+            } else if isMock {
+                return "Simulatore semantico v0.6 attivo per test e validazione schema JSON."
+            } else {
+                return "Ollama non attivo. Il motore deterministico garantisce la protezione."
+            }
+        }()
+        
+        MetricCardView(
+            title: "Analista AI Locale",
+            value: llmService.config.selectedModel,
+            detail: detailText,
+            icon: "brain.head.profile",
+            badgeText: badgeText,
+            badgeStyle: badgeStyle,
+            actionTitle: "Configura modello →",
+            action: {
+                appState.selectedTab = .settings
+            }
+        )
+    }
 }
+

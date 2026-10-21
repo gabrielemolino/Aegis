@@ -375,6 +375,11 @@ public struct AnalysisView: View {
                             }
                         }
                         
+                        // Sezione Triage Semantico LLM Locale (v0.6)
+                        if let ai = report.llmAnalysis {
+                            llmReportSection(ai: ai)
+                        }
+                        
                         // Limiti noti dell'analisi
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Limiti dell'Analisi (Dichiarazione Esplicita):")
@@ -399,6 +404,102 @@ public struct AnalysisView: View {
             .padding(24)
         }
         .background(Theme.bgDeep)
+    }
+    
+    // MARK: - Subview: Triage Semantico LLM (v0.6)
+    
+    @ViewBuilder
+    private func llmReportSection(ai: LLMAnalysisReport) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center) {
+                Image(systemName: "brain.head.profile")
+                    .foregroundColor(Theme.accentTeal)
+                    .font(.system(size: 16))
+                
+                Text("Triage Semantico AI: \(ai.modelName)")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(Theme.textPrimary)
+                
+                Spacer()
+                
+                if ai.isMockResponse {
+                    StatusBadgeView("Mock Offline", style: .manualReview)
+                } else {
+                    StatusBadgeView("Ollama Live", style: .verified)
+                }
+                
+                StatusBadgeView(ai.recommendedAction.rawValue, style: .neutral)
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                Text(ai.summary)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(Theme.textPrimary)
+                
+                Text(ai.technicalExplanation)
+                    .font(.system(size: 11))
+                    .foregroundColor(Theme.textSecondary)
+                    .lineSpacing(2)
+            }
+            .padding(10)
+            .background(Theme.surfaceElevated.opacity(0.6))
+            .cornerRadius(6)
+            
+            if !ai.mitreAttackTechniques.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Tecniche MITRE ATT&CK Mappate:")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(Theme.textPrimary)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(ai.mitreAttackTechniques, id: \.self) { tech in
+                            HStack(spacing: 6) {
+                                Image(systemName: "tag.fill")
+                                    .font(.system(size: 9))
+                                    .foregroundColor(Theme.accentTealBright)
+                                Text(tech)
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .foregroundColor(Theme.textPrimary)
+                            }
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Theme.bgDeep)
+                            .cornerRadius(4)
+                        }
+                    }
+                }
+            }
+            
+            if !ai.referencedEvidenceEventIDs.isEmpty {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 11))
+                        .foregroundColor(Theme.accentTealBright)
+                    Text("Evidenze confermate (Anti-Allucinazione):")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(Theme.textMuted)
+                    Text(ai.referencedEvidenceEventIDs.joined(separator: ", "))
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(Theme.accentTealBright)
+                }
+            }
+            
+            HStack(spacing: 6) {
+                Image(systemName: "shield.lefthalf.filled")
+                    .font(.system(size: 10))
+                    .foregroundColor(Theme.textMuted)
+                Text("Analisi consultiva: zero esecuzione di comandi arbitrari sull'host o sul guest.")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(Theme.textMuted)
+            }
+        }
+        .padding(12)
+        .background(Theme.bgDeep.opacity(0.8))
+        .cornerRadius(6)
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(Theme.accentTeal.opacity(0.3), lineWidth: 1)
+        )
     }
     
     // MARK: - Subviews per Card 2 (Preflight e Parametri)

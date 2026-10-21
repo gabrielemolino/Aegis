@@ -6,7 +6,7 @@
 [![Swift 6.1](https://img.shields.io/badge/Swift-6.1-orange.svg)](https://swift.org)
 [![SwiftUI](https://img.shields.io/badge/UI-SwiftUI%20Native-teal.svg)](https://developer.apple.com/xcode/swiftui/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status: v0.1 Prototype](https://img.shields.io/badge/Release-v0.1%20Baseline-cyan.svg)](#roadmap-per-release)
+[![Status: v0.6 Local LLM](https://img.shields.io/badge/Release-v0.6%20Local%20LLM-cyan.svg)](#roadmap-per-release)
 
 ---
 
@@ -14,7 +14,7 @@
 
 SentinelAI aiuta l'utente a verificare file o programmi scaricati da Internet all'interno di un ambiente di analisi isolato controllato (macchina virtuale UTM su Apple Silicon).
 
-Combina controlli di sicurezza tradizionali, preflight rigoroso per l'isolamento host, telemetria comportamentale in ambiente guest usa-e-getta, contenimento automatico e un LLM locale opzionale per la spiegazione guidata degli eventi.
+Combina controlli di sicurezza tradizionali, preflight rigoroso per l'isolamento host, telemetria comportamentale in ambiente guest usa-e-getta, contenimento automatico e un LLM locale opzionale (`qwen2.5-coder:3b` via Ollama) per la spiegazione guidata degli eventi e il mapping MITRE ATT&CK.
 
 > **Avvertenza di Sicurezza & Limiti Noti:**  
 > SentinelAI è un **prototipo tecnico di ricerca e portfolio ingegneristico**, non un prodotto commerciale o un sostituto dei sistemi nativi di macOS (XProtect, Gatekeeper, MRT, Firewall). La priorità è ridurre la superficie d'attacco ed evitare diffusioni incontrollate, non garantire l'individuazione del 100% delle minacce o l'impossibilità assoluta di evasione da hypervisor.
@@ -32,7 +32,7 @@ Combina controlli di sicurezza tradizionali, preflight rigoroso per l'isolamento
 
 ---
 
-## 3. Architettura Logica (v0.1)
+## 3. Architettura Logica (v0.6)
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
@@ -47,11 +47,14 @@ Combina controlli di sicurezza tradizionali, preflight rigoroso per l'isolamento
 │              │                                                  │
 │              ▼                                                  │
 │  ┌────────────────────────┐         ┌────────────────────────┐  │
-│  │   SecurityEngine Host  │         │  SystemCheckService    │  │
-│  │ • Calcolo SHA-256 puro │         │ • Apple Silicon arm64  │  │
-│  │ • Regole deterministiche◀───────── • macOS 14+ compatibile│  │
-│  │ • Controlli Preflight  │         │ • UTM.app detection    │  │
-│  └───────────┬────────────┘         └────────────────────────┘  │
+│  │   SecurityEngine Host  │         │ Local LLM (Ollama v0.6)│  │
+│  │ • Calcolo SHA-256 puro │         │ • Modello:             │  │
+│  │ • Regole deterministiche◀──────────  qwen2.5-coder:3b     │  │
+│  │ • Controlli Preflight  │         │ • Schema JSON rigido   │  │
+│  │ • Contenimento VM      │         │ • Mapping MITRE ATT&CK │  │
+│  └───────────┬────────────┘         │ • Anti-Prompt Injection│  │
+│              │                      │ • Anti-Allucinazione   │  │
+│              │                      └────────────────────────┘  │
 └──────────────┼──────────────────────────────────────────────────┘
                │ Nessuna condivisione cartelle / Nessuna rete / Fail-Closed
                ▼
@@ -59,8 +62,9 @@ Combina controlli di sicurezza tradizionali, preflight rigoroso per l'isolamento
 │              UTM Isolated Sandbox (Guest Usa-e-getta)           │
 │                                                                 │
 │  • VM Designata: SentinelAI-Ubuntu-Guest                        │
+│  • Sensore Telemetrico: sentinel_guest_sensor.py (Python 3)     │
+│  • Ingestione: Stream JSONL unidirezionale                      │
 │  • Ripristino automatico da Snapshot pulito                     │
-│  • Telemetria guest e contenimento controllato dal controller   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -71,6 +75,15 @@ Combina controlli di sicurezza tradizionali, preflight rigoroso per l'isolamento
 - **Piattaforma:** macOS 14 (Sonoma) o successivo su Apple Silicon (M1 / M2 / M3 / M4 / M5).
 - **Toolchain:** Swift 6.0+ o Xcode 16+.
 - **Sandbox Guest:** [UTM Virtual Machines per macOS](https://mac.getutm.app/).
+- **Analista LLM Locale (Opzionale v0.6):** [Ollama](https://ollama.com/) con modello `qwen2.5-coder:3b`.
+  ```bash
+  # Installazione Ollama tramite Homebrew
+  brew install ollama
+  
+  # Download ed esecuzione del modello ottimizzato per Apple Silicon 8GB
+  ollama pull qwen2.5-coder:3b
+  ollama run qwen2.5-coder:3b
+  ```
 
 ---
 
@@ -92,11 +105,18 @@ swift run SentinelAI
 
 ---
 
-## 6. Risultati della Suite di Test v0.1
+## 6. Risultati della Suite di Test v0.6
 
 Tutti i test unitari e di sicurezza sono eseguiti in locale e verificati:
 
 ```text
+✔ Test "Validazione Schema JSON Rigoroso: convalida corretta dei campi strutturati" passed
+✔ Test "Anti-Allucinazione: scarta categoricamente ID evento inesistenti o inventati dall'LLM" passed
+✔ Test "Allowlist Azioni Raccomandate: azioni non autorizzate ripiegano in sicurezza su LOG_AND_MONITOR" passed
+✔ Test "Resilienza Prompt Difensivo: la telemetria untrusted è confinata e marcata come dato passivo" passed
+✔ Test "Fail-Safe su JSON Non Conforme: scarta risposte troncate o corrotte senza crash" passed
+✔ Test "Simulatore Mock qwen2.5-coder:3b: genera report coerenti con gli scenari comportamentali" passed
+✔ Test "Integrazione SecurityEngine: allegamento semantico dell'LLM all'analisi finale" passed
 ✔ Test "Verifica completezza delle 4 classificazioni ammesse" passed
 ✔ Test "Verifica sanity check baseline" passed
 ✔ Test "Verifica checklist di isolamento e conteggio controlli pendenti" passed
@@ -137,8 +157,8 @@ Tutti i test unitari e di sicurezza sono eseguiti in locale e verificati:
 ✔ Test "Rilevamento Persistenza Non Autorizzata: attiva RULE-PERSIST-002" passed
 ✔ Test "Anti-Tamper nei log: prompt injection trattata rigorosamente come dato passivo" passed
 ✔ Test "Analisi completa con SecurityEngine produce report reale (isSimulatedDemo == false)" passed
-Executed 40 Swift tests with 0 failures in 0.188 seconds.
-Executed 6 Python sensor validation tests with 0 failures in 2.573 seconds.
+Executed 47 Swift tests with 0 failures in 0.277 seconds.
+Executed 6 Python sensor validation tests with 0 failures in 2.567 seconds.
 ```
 
 ---
@@ -152,11 +172,12 @@ Executed 6 Python sensor validation tests with 0 failures in 2.573 seconds.
 | **v0.3** | Motore di regole deterministico completo con catalogo versionato, parser eventi, 6 dataset fixture sintetiche, banco di prova interattivo ed evidenze con ID evento. | **Completato** |
 | **v0.4** | Controllo VM: controller host per la sola VM autorizzata, divieto VM estranee, conferma reale dell'arresto (zero falsi successi), obbligo rollback post-contenimento. | **Completato** |
 | **v0.5** | Sensore guest Python 3 su Ubuntu ARM64 (processi, file, rete, heartbeat), ingestione sicura JSONL, analisi reale non simulata. | **Completato** |
-| **v0.6** | Integrazione LLM locale con Ollama (spiegazione semantica con schema JSON validato). | Prossimo passo |
-| **v0.7** | Beta pubblica, test end-to-end con simulazioni innocue e packaging macOS. | Pianificato |
+| **v0.6** | Integrazione LLM locale con Ollama (`qwen2.5-coder:3b`), spiegazione semantica, mapping MITRE ATT&CK, validazione JSON rigida, anti-allucinazione evidenze, fail-closed fallback. | **Completato** |
+| **v0.7** | Beta pubblica, test end-to-end con simulazioni innocue e packaging macOS. | Prossimo passo |
 
 ---
 
 ## 8. Licenza
 
 Rilasciato sotto licenza [MIT](LICENSE).
+

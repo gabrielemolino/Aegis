@@ -289,7 +289,12 @@ public final class SecurityEngine: ObservableObject {
                     "Possibile presenza di evasione sandbox tramite time-delay o evasion heuristics.",
                     "Non costituisce garanzia assoluta di assenza di codice malevolo."
                 ],
-                isSimulatedDemo: true
+                isSimulatedDemo: true,
+                llmAnalysis: LocalLLMService.shared.generateMockExplanation(
+                    targetFile: file,
+                    events: FixtureDatasets.makeCleanFixture(),
+                    matches: []
+                )
             )
             
         case .suspiciousActivity:
@@ -331,7 +336,12 @@ public final class SecurityEngine: ObservableObject {
                     "Nessun traffico di rete osservato a causa dell'isolamento totale attivo.",
                     "Simulazione basata su fixture comportamentale prefissata v0.1."
                 ],
-                isSimulatedDemo: true
+                isSimulatedDemo: true,
+                llmAnalysis: LocalLLMService.shared.generateMockExplanation(
+                    targetFile: file,
+                    events: FixtureDatasets.makeTempBurstFixture(),
+                    matches: [RuleEvaluationMatch(ruleId: "RULE-IO-014", ruleName: "TempDirHighWriteRate", severity: .medium, category: .behavioralIO, triggeredEventIDs: ["EVT-BURST-001"], matchedIndicator: "Scritture /tmp elevate", recommendedAction: .raiseWarningAlert)]
+                )
             )
             
         case .criticalMalware:
@@ -379,7 +389,12 @@ public final class SecurityEngine: ObservableObject {
                     "La VM è stata arrestata per contenimento. Per ulteriori analisi è necessario ripristinare la base pulita.",
                     "L'esito dimostra la funzionalità di spegnimento immediato del controller host."
                 ],
-                isSimulatedDemo: true
+                isSimulatedDemo: true,
+                llmAnalysis: LocalLLMService.shared.generateMockExplanation(
+                    targetFile: file,
+                    events: FixtureDatasets.makeCriticalPersistenceFixture(),
+                    matches: [RuleEvaluationMatch(ruleId: "RULE-PERSIST-002", ruleName: "UnauthorizedPersistenceWrite", severity: .critical, category: .persistence, triggeredEventIDs: ["EVT-CRIT-PERSIST"], matchedIndicator: "Scrittura in systemd", recommendedAction: .stopAuthorizedVM)]
+                )
             )
             
         case .unverifiable:
@@ -413,7 +428,12 @@ public final class SecurityEngine: ObservableObject {
                     "Nessun giudizio espresso sul file: l'esito è esplicitamente 'Non verificabile'.",
                     "Non fidarsi di esiti incompleti quando l'infrastruttura di monitoraggio degrada."
                 ],
-                isSimulatedDemo: true
+                isSimulatedDemo: true,
+                llmAnalysis: LocalLLMService.shared.generateMockExplanation(
+                    targetFile: file,
+                    events: FixtureDatasets.makeHeartbeatLossFixture(),
+                    matches: [RuleEvaluationMatch(ruleId: "RULE-HEARTBEAT-000", ruleName: "SensorHeartbeatLoss", severity: .high, category: .telemetryHealth, triggeredEventIDs: ["EVT-DEGRADED-001"], matchedIndicator: "Heartbeat assente", recommendedAction: .markMonitoringDegraded)]
+                )
             )
         }
     }
@@ -474,6 +494,15 @@ public final class SecurityEngine: ObservableObject {
             "Tutti i dati estratti dal guest sono trattati categoricamente come dati passivi non affidabili."
         ]
         
+        var llmReport: LLMAnalysisReport? = nil
+        if LocalLLMService.shared.config.isLLMAnalysisEnabled {
+            llmReport = LocalLLMService.shared.generateMockExplanation(
+                targetFile: file,
+                events: ingestionResult.events,
+                matches: ingestionResult.ruleMatches
+            )
+        }
+        
         let report = AnalysisReport(
             targetFile: file,
             classification: ingestionResult.classification,
@@ -483,7 +512,8 @@ public final class SecurityEngine: ObservableObject {
             rulesTriggered: triggers,
             actionsExecuted: actions,
             limitations: limitations,
-            isSimulatedDemo: false
+            isSimulatedDemo: false,
+            llmAnalysis: llmReport
         )
         
         self.currentReport = report
@@ -496,10 +526,17 @@ public final class SecurityEngine: ObservableObject {
             category: .analysis,
             source: "SecurityEngine",
             description: "Analisi telemetria guest v0.5 completata. Esito: \(report.classification.rawValue)",
-            details: "Confidenza: \(Int(report.confidenceScore * 100))%, Regole matchate: \(triggers.count)",
+            details: "Confidenza: \(Int(report.confidenceScore * 100))%, Regole matchate: \(triggers.count), LLM: \(llmReport != nil ? "Generato" : "Disabilitato")",
             isSimulation: false
         )
         
         return report
+    }
+    
+    /// Aggiorna il report corrente con i risultati arricchiti dall'LLM locale
+    public func attachLLMReport(_ report: LLMAnalysisReport?) {
+        guard var current = self.currentReport else { return }
+        current.llmAnalysis = report
+        self.currentReport = current
     }
 }
